@@ -7,7 +7,7 @@ switch ($_REQUEST['action']) {
     
     case 'list':
     default:
-        $sql = 'select ' .implode(', ' , $dataTypeColumns) .' from Category';
+        $sql = 'select ' .implode(', ' , $dataTypeColumns) .' from Category order by name';
         
         $result1 = $db->query($sql);
         if(!$result1) {
