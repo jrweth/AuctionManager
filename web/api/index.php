@@ -40,10 +40,10 @@
         echo '<html><head>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript">
-    submitUpdate = function() {
+    submitUpdate = function(tableName) {
         var formVars = $("#updateForm").serialize();
         $.ajax({
-           url: "category/6",
+           url: tableName + "/2",
            type: "PUT",
            data: formVars,
            dataType: "json",
@@ -55,10 +55,10 @@
            },
           });
           }
-    submitDelete = function() {
+    submitDelete = function(tableName) {
         var formVars = $("#updateForm").serialize();
         $.ajax({
-           url: "category/5",
+           url: tableName + "/2",
            type: "DELETE",
            dataType: "json",
            error: function(jqXHR, textStatus, errorThrow){
@@ -72,24 +72,34 @@
       </script>
     </head>
     <body>
+        <h1>category</h1>
         <form action="category" method="post">
         <input name="name" />
         <input type="submit" />
         <input type="hidden" name="auction_group_id" value="1" />
         </form>
         update<form id="updateForm" action="category/6" method="put">
+        <input name="name" /><a onclick="submitUpdate(\'category\')">update</a>
+        </form>
+        <button onclick="submitDelete(\'category\')">delete</button>
+        <h1>auction group</h1>
+        <form action="auction_group" method="post">
+        <input name="name" />
+        <input type="submit" />
+        </form>
+        update<form id="updateForm" action="auction_group/1" method="put">
         <input name="name" /><a onclick="submitUpdate()">update</a>
         </form>
-        <button onclick="submitDelete()">delete</button>
+        <button onclick="submitDelete(\'auction_group\')">delete</button>
     </body></html>';
     });
     
-    $app->get('/category', function () use ($db) {
-        echo json_encode(DBHelper::getTableRecords($db, 'category'));
+    $app->get('/:tableName', function ($tableName) use ($db) {
+        echo json_encode(DBHelper::getTableRecords($db, $tableName));
     });
     
-    $app->get('/category/:id', function ($id) use ($db) {
-        if($record = DBHelper::getTableRecord($db, 'category', $id)) {
+    $app->get('/:tableName/:id', function ($tableName, $id) use ($db) {
+        if($record = DBHelper::getTableRecord($db, $tableName, $id)) {
             echo json_encode($record);
         }
         else {
@@ -97,8 +107,8 @@
         }
     });
     
-    $app->post('/category', function () use ($db, $app) {
-        if($id = DBHelper::insertTableRecord($db, 'category', $app->request()->post())) {
+    $app->post('/:tableName', function ($tableName) use ($db, $app) {
+        if($id = DBHelper::insertTableRecord($db, $tableName, $app->request()->post())) {
             outputResult('add', true, $id);
         }
         else {
@@ -107,18 +117,18 @@
     });
     
     
-    $app->put('/category/:id', function ($id) use ($db, $app) {
+    $app->put('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
         outputResult(
            'add',
-           DBHelper::updateTableRecord($db, 'category', $id, $app->request()->post()),
+           DBHelper::updateTableRecord($db, $tableName, $id, $app->request()->post()),
            $id
         );
     });
     
-    $app->delete('/category/:id', function ($id) use ($db) {
+    $app->delete('/:tableName/:id', function ($tableName, $id) use ($db) {
         outputResult(
            'delete',
-           DBHelper::deleteTableRecord($db, 'category', $id),
+           DBHelper::deleteTableRecord($db, $tableName, $id),
            $id
         );
     });
