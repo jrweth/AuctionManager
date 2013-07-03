@@ -2,6 +2,7 @@
 
 namespace AuctionManager\controller;
 
+use \AuctionManager\util\DBHelper as DBHelper;
 
 class Category extends Base
 {
@@ -35,6 +36,20 @@ class Category extends Base
             //make sure name is defined
             if(!$request['data']['name']) {
                 throw new \Exception('You must supply a name for the category.');
+            }
+            
+            $id = DBHelper::getNextId($this->db, 'category');
+            $result['data']['id'] = $id;
+            
+            //insert into the db
+            $sql = 'INSERT INTO Category (id, auction_group_id, name) VALUES (' . $id  .",1,'" . $request['data']['name'] ."')";
+
+            if($inserted = $this->db->exec($sql)) {
+                $result['success'] = true;
+                $result['message'] = 'Category successfully inserted';
+            }
+            else {
+                throw new \Exception('The following database error occured: '. $this->db->lastErrorMsg());
             }
         }
         catch (\Exception $e) {
