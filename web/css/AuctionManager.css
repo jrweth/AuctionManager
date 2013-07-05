@@ -1,0 +1,13 @@
+@CHARSET "UTF-8";
+
+.dataList .editMode {
+    display: none; /* Hides Editing Elements */
+}
+
+.dataList .editing .editMode {
+  display: inline; /* Shows input text box when .editing*/
+}
+
+.dataList .editing .viewMode{
+  display: none; /* Hides label text when .editing*/
+}    
