@@ -1,0 +1,84 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+    <select id="test"></select>
+    <select id="test2"></select>
+
+  <!-- Templates -->
+<script type="text/template" id="amDataRow">
+    here is my second template
+</script>
+
+
+<script type="text/template" id="amDropDownOption">
+    <option value="<%- value %>" <% if (selected == value) { %> selected="selected" <% } %> ><%- display %></option>
+</script>  
+
+{% endblock %}
+
+
+{% block customJS %}
+  <script type="text/javascript">
+    'use strict';
+
+    var app = {}; // create namespace for our app
+
+    //--------------
+    // Models
+    //--------------
+    app.Category = Backbone.Model.extend({
+      urlRoot: '{{ webRoot }}api/category',
+      defaults: {
+        name: '',
+        auction_group_id: 1
+      }
+    });
+
+    //--------------
+    // Collections
+    //--------------
+    app.CategoryCollection = Backbone.Collection.extend({
+      model: app.Category,
+      url: '{{ webRoot }}api/category',
+    });
+
+    // instance of the Collection
+    app.categoryCollection = new app.CategoryCollection();
+    //--------------
+    // Views
+    //--------------
+    
+
+    app.CategoryDropDownView = Backbone.View.extend({
+        el: '#test',
+        template: _.template($('#amDropDownOption').html()),
+        initialize: function() {
+            console.log('selected' + this.options.selected);
+            app.categoryCollection.on('add', this.addOne, this);
+            app.categoryCollection.on('reset', this.addAll, this);
+            app.categoryCollection.fetch(); // Loads list from local storage
+        },
+        render: function() {
+            console.log('category drop down view rendering');
+            this.addAll();
+        },
+        addOne: function(category){
+            console.log('adding one');
+            var option = this.template({value: category.get('id'), display: category.get('name'), selected: this.options.selected });
+            console.log(option);
+            this.$el.append(option);
+        },
+        addAll: function(){
+            console.log('adding all');
+            //this.$el.html(app.categoryCollection.length + 'hi mom'); // clean the todo list
+            app.categoryCollection.each(this.addOne, this);
+            console.log('added all');
+        },
+    });
+    
+    app.categoryDropDownView = new app.CategoryDropDownView({selected:  16});
+    app.categoryDropDownView = new app.CategoryDropDownView({selected:  18, el: "#test2"});
+    app.categoryDropDownView.render();
+    
+  </script>
+{% endblock %}
