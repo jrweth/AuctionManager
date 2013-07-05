@@ -27,6 +27,8 @@ $app = new Slim\Slim();
 $loader = new Twig_Loader_Filesystem($config['projectRoot'].'lib/AuctionManager/template');
 $twig = new Twig_Environment($loader);
 $twig->addGlobal('webRoot', $config['webRoot']);
+$twig->addGlobal('auctionId', 1);
+$twig->addGlobal('auctionGroupId', 1);
 
 //load db
 $db = new PDO('sqlite:' . $config['projectRoot'].$config['dbPath']);
