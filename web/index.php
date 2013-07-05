@@ -2,37 +2,48 @@
 
 //load config
 $config = parse_ini_file('config/config.ini');
-require_once '../vendor/autoload.php';
 
-
+//set path
 ini_set('include_path', ini_get('include_path').':'. $config['projectRoot'].'lib');
 
+//get the composer autoloader
+require_once $config['projectRoot'].'vendor/autoload.php';
+
+//add standard autoloader
 spl_autoload_register(
   function ($pClassName) {
     include(str_replace("\\", "/", $pClassName).'.php');
   }
 );
 
-error_reporting(E_ALL);
+//add the slim project and autoloader
+require $config['projectRoot'].'vendor/slim/slim/Slim/Slim.php';
+Slim\Slim::registerAutoloader();
+
+//set up the slim app 
+$app = new Slim\Slim();
 
 //load Twig
 $loader = new Twig_Loader_Filesystem($config['projectRoot'].'lib/AuctionManager/template');
 $twig = new Twig_Environment($loader);
+$twig->addGlobal('webRoot', $config['webRoot']);
 
 //load db
-$db = new SQLite3($config['projectRoot']. $config['dbPath']);
+$db = new PDO('sqlite:' . $config['projectRoot'].$config['dbPath']);
 
-//route requests
-switch ($_REQUEST['dataType']) {
+//wrap all setup objects in a container for dependecy injection
+$container = array(
+    'config' => $config,
+    'app' => $app,
+    'twig' => $twig,
+    'db' => $db
+ );
 
-    case 'category':
-        $controller = new \AuctionManager\controller\Category($db, $twig);
-        echo $controller->handleRequest($_REQUEST);
-        break;
-    default:
-        echo $twig->render('layout.html.twig');
-}
+//set up the routing
+$appRouter = new AuctionManager\app\AppRouter($container);
+$appRouter->route();
 
-
+//run the application
+$app->run();
 
 ?>
