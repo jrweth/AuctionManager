@@ -116,11 +116,10 @@ class DBHelper {
         //add id criteia
         $sql .= ' WHERE id = ' . intval($id);
         
-        $sth = $db->prepare($sql);
-        $sth->execute(array_values($values));
-    
+        $stmt = $db->prepare($sql);
+        $stmt->execute(array_values($values));
         //return the id if successful
-        if($sth->rowCount() == 1) {
+        if($stmt->rowCount() == 1) {
             return true;
         }
         else {
