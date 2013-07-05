@@ -4,12 +4,11 @@ namespace AuctionManager\controller;
 
 abstract class Base
 {
-    /**
-     * 
-     * @var \SQLite3
-     */
-    protected $db;
+    /**  @var array */
+    protected $container;
     
+    /**  @var \PDO */
+    protected $db;
     
     /** @var \Twig_Environment **/
     protected $twig;
@@ -20,13 +19,12 @@ abstract class Base
      * @param \SQLite3 $db
      * @param \Twig_Environment $twig
      */
-    public function __construct($db, $twig)
+    public function __construct($container)
     {
-        $this->db = $db;
-        $this->twig = $twig;
-        
+        $this->db = $container['db'];
+        $this->twig = $container['twig'];
+        $this->app = $container['app'];
+        $this->container = $container;
     }
-    
-    public abstract function handleRequest($request, $options);
     
 }
