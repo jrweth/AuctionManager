@@ -32,6 +32,11 @@ class AppRouter
             $controller = new \AuctionManager\controller\Category($container);
             echo $controller->listAction();
         });
+        $this->app->get('/item', function() use($container) {
+        
+            $controller = new \AuctionManager\controller\Item($container);
+            echo $controller->listAction();
+        });
     }
 }
 
