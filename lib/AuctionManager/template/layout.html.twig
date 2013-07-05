@@ -2,9 +2,15 @@
 <html>
     <head>
         {% block head %}
-            <link rel="stylesheet" href="style.css" />
             <title>Auction Manager {% block title %}{{ pageTitle }}{% endblock %}</title>
         {% endblock %}
+        
+        {% block headStyles %}
+            <link rel="stylesheet" href="css/AuctionManager.css" />
+        {% endblock %}
+        
+        {% block headCustom %}{% endblock %}
+        
     </head>
     <body>
         <nav id="heaver_nav">
@@ -12,6 +18,7 @@
             <ul>
                 <li><a href="{{ webRoot }}">DB Home</a></li>
                 <li><a href="{{ webRoot }}category">Category</a></li>
+                <li><a href="{{ webRoot }}item">Items</a></li>
             </ul>
         {% endblock %}
         </nav>
