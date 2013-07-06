@@ -26,6 +26,7 @@ $app->contentType('application/json');
 
 //set up the db
 $db = new PDO('sqlite:' . $config['projectRoot'].$config['dbPath']);
+$db->exec('PRAGMA foreign_keys = ON');
 
 function outputResult($action, $success = true, $id = 0)
 {
