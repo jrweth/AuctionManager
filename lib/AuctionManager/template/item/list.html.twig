@@ -1,12 +1,39 @@
 {% extends "layout.html.twig" %}
 
 {% block content %}
-    <select id="test"></select>
-    <select id="test2"></select>
+    <table id="itemList">
+        <thead></thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+    </table>
 
-  <!-- Templates -->
-<script type="text/template" id="amDataRow">
-    here is my second template
+<!-- Templates -->
+<script type="text/template" id="amDataTableRow">
+    <td>
+        <button class="edit">edit</button>
+        <button calss="delete">delete</button>
+    </td>
+    <% for (fieldName in fields) { switch(fields[fieldName].listDisplay) {
+            case 'none': break;
+            case 'lookup':
+                if (lookupModel = app[fields[fieldName].lookupCollection].get(data[fieldName])) { %>
+                   <td><%= lookupModel.toString() %></td>
+                <% } else { %>
+                    <td>&#160;</td>
+                <% } break;
+            case 'link':
+            case 'text': %>
+                <td><%= data[fieldName] %></td>
+            
+    <% }} %>
+</script>
+
+
+<script type="text/template" id="amDataTableHeader">
+    <td>&#160;</td>
+    <% for (fieldName in fields) { if (fields[fieldName].listDisplay != 'none') { %> 
+        <th><%= fields[fieldName].label %></th>
+    <% }} %>
 </script>
 
 
@@ -30,55 +57,113 @@
       urlRoot: '{{ webRoot }}api/category',
       defaults: {
         name: '',
-        auction_group_id: 1
+        auction_group_id: {{ auctionGroupId }}
+      },
+      initialize: function() {
+          this.toString = function() {
+              return this.attributes.name;
+          }
       }
     });
 
+    app.Item = Backbone.Model.extend({
+        urlRoot: '{{ webRoot }}api/item',
+        defaults: {
+            auction_id: {{ auctionId }}
+        },
+        fields: {
+            id: {type: 'primaryId', label: 'id', listDisplay: 'none'},
+            auction_id: {type: 'lookupId', label: 'Auction', listDisplay: 'none'},
+            title: {type: 'string', label: 'Title', listDisplay: 'text'},
+            donor_display_name: {type: 'string', label: 'Donor Display Name', listDisplay: 'text'},
+            description: {type: 'string', label: 'Description', listDisplay: 'text'},
+            category_id: {type: 'lookupId', label: 'Category', listDisplay: 'lookup', lookupCollection: 'categoryCollection'},
+            value: {type: 'integer', label: 'Value', listDisplay: 'text'},
+            min_bid: {type: 'integer', label: 'Min Bid', listDisplay: 'text'},
+            notes: {type: 'string', label: 'Notes', listDisplay: 'text'},
+            additional_information: {type: 'string', label: 'Additional Information', listDisplay: 'text'},
+            image_url: {type: 'string', label: 'Image URL', listDisplay: 'link'},
+        },
+        getFields : function() {
+            return this.fields;
+        }
+    });
+    
     //--------------
     // Collections
     //--------------
     app.CategoryCollection = Backbone.Collection.extend({
       model: app.Category,
-      url: '{{ webRoot }}api/category',
+      url: '{{ webRoot }}api/category'
     });
 
-    // instance of the Collection
-    app.categoryCollection = new app.CategoryCollection();
+    app.ItemCollection = Backbone.Collection.extend({
+        model: app.Item,
+        url: '{{ webRoot }}api/item'
+    });
+    
     //--------------
     // Views
     //--------------
     
-
     app.CategoryDropDownView = Backbone.View.extend({
         el: '#test',
         template: _.template($('#amDropDownOption').html()),
         initialize: function() {
-            console.log('selected' + this.options.selected);
             app.categoryCollection.on('add', this.addOne, this);
             app.categoryCollection.on('reset', this.addAll, this);
             app.categoryCollection.fetch(); // Loads list from local storage
         },
         render: function() {
-            console.log('category drop down view rendering');
             this.addAll();
         },
         addOne: function(category){
-            console.log('adding one');
             var option = this.template({value: category.get('id'), display: category.get('name'), selected: this.options.selected });
-            console.log(option);
             this.$el.append(option);
         },
         addAll: function(){
-            console.log('adding all');
-            //this.$el.html(app.categoryCollection.length + 'hi mom'); // clean the todo list
+            this.$el.html(''); // clean the todo list
             app.categoryCollection.each(this.addOne, this);
             console.log('added all');
         },
     });
+
+    app.ItemView = Backbone.View.extend({
+        tagName: 'tr',
+        template: _.template($('#amDataTableRow').html()),
+        render: function() {
+            this.$el.html(this.template({fields: this.model.getFields(), data: this.model.toJSON()}));
+            return this;
+        }
+    });
+
+    app.ItemListView = Backbone.View.extend({
+        el: '#itemList',
+        initialize: function() {
+            var headerTemplate = _.template($('#amDataTableHeader').html());
+            this.$el.children('thead').append(headerTemplate({fields: app.Item.prototype.getFields()}));
+
+            app.itemCollection.on('add', this.addAll, this);
+            app.itemCollection.on('reset', this.addAll, this);
+            app.itemCollection.fetch(); // Loads list from local storage
+            
+        },
+        addOne: function(item) {
+            var view = new app.ItemView({model: item});
+            this.$el.children('tbody').append(view.render().el);
+        },
+        addAll: function() {
+            this.$el.children('tbody').html(''); // clean the list
+            app.itemCollection.each(this.addOne, this);
+        },
+    });
     
-    app.categoryDropDownView = new app.CategoryDropDownView({selected:  16});
-    app.categoryDropDownView = new app.CategoryDropDownView({selected:  18, el: "#test2"});
-    app.categoryDropDownView.render();
-    
+    // setup the collections
+    app.categoryCollection = new app.CategoryCollection();
+    app.itemCollection = new app.ItemCollection();
+
+    // initialize the list
+    app.itemListView = new app.ItemListView();
+
   </script>
 {% endblock %}
