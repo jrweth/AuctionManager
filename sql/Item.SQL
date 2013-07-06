@@ -20,7 +20,7 @@ CREATE TABLE Item
 	additional_information TEXT,
 	image_url VARCHAR(255),
 	PRIMARY KEY (id),
-	FOREIGN KEY (auction_id) REFERENCES Auction (id),
+	FOREIGN KEY (auction_id) REFERENCES Auction (id) ON DELETE CASCADE,
 	FOREIGN KEY (category_id) REFERENCES Category (id)
 ) 
 ;
