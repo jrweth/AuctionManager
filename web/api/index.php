@@ -80,6 +80,9 @@ $app->delete('/:tableName/:id', function ($tableName, $id) use ($db) {
     if(!DBHelper::deleteTableRecord($db, $tableName, $id)) {
         $app->halt(500, 'An Error Occured trying to delete the record.');
     }
+    else {
+        echo '{}';
+    }
 });
 
 
