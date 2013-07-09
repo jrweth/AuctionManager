@@ -24,57 +24,7 @@
         </nav>
         <h1>{{ pageTitle }}</h1>
         <div id="content">{% block content %}
-<script type="text/javascript">
-submitUpdate = function(tableName) {
-    var formVars = $("#updateForm").serialize();
-    $.ajax({
-       url: "{{ webRoot }}api/" + tableName + "/3",
-       type: "PUT",
-       data: formVars,
-       dataType: "json",
-       error: function(jqXHR, textStatus, errorThrow){
-         alert("error");
-         },
-        success: function(data){
-         alert(data);
-       },
-      });
-      }
-submitDelete = function(tableName) {
-    var formVars = $("#updateForm").serialize();
-    $.ajax({
-       url: tableName + "/3",
-       type: "DELETE",
-       dataType: "json",
-       error: function(jqXHR, textStatus, errorThrow){
-         alert("error");
-         },
-        success: function(data){
-         alert(data.success);
-       },
-      });
-      }
-  </script>
-    <h1>category</h1>
-    <form action="category" method="post">
-    <input name="name" />
-    <input type="submit" />
-    <input type="hidden" name="auction_group_id" value="1" />
-    </form>
-    update<form id="updateForm" action="category/6" method="put">
-    <input name="name" />
-    </form>
-    <input name="name" /><button onclick="submitUpdate('category')">update</button>
-    <button onclick="submitDelete(\'category\')">delete</button>
-    <h1>auction group</h1>
-    <form action="auction_group" method="post">
-    <input name="name" />
-    <input type="submit" />
-    </form>
-    update<form id="updateForm" action="auction_group/1" method="put">
-    </form>
-    <button onclick="submitDelete(\'auction_group\')">delete</button>
-    <button onclick="submitUpdate(\'category\'); return false;">update</button>
+        <h1>Welcome to Auction Manager</h1>
 {% endblock %}</div>
         
         {% block mainJS %}
