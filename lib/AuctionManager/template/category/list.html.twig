@@ -118,7 +118,7 @@
         this.$el.removeClass('editing');
       },
       delete: function(){
-        this.model.destroy();
+        this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the category');}});
       },
       updateOnEnter: function(e){ //check for hitting enter
           if(e.which == 13){
