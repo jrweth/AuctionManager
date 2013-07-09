@@ -12,7 +12,8 @@ CREATE TABLE Category
 	auction_group_id INTEGER NOT NULL,
 	name VARCHAR(100) NOT NULL,
 	PRIMARY KEY (id),
-	FOREIGN KEY (auction_group_id) REFERENCES Auction_Group (id) ON DELETE CASCADE
+	FOREIGN KEY (auction_group_id) REFERENCES Auction_Group (id) ON DELETE CASCADE,
+	UNIQUE (auction_group_id, name)
 ) 
 ;
 
