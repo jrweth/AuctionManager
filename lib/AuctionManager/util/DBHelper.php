@@ -79,13 +79,30 @@ class DBHelper {
         $values['id'] = $id;
         
         //create the query and bind the values
-        $sql = 'INSERT INTO ' . $tableName . '( ' . implode(', ', array_keys($values)) . ') ';
-        $sql .= ' VALUES (' . str_repeat('?, ', count($values) -1 ) . ' ?)';
-        $sth = $db->prepare($sql);
-        $sth->execute(array_values($values));
+        $sql = 'INSERT INTO ' . $tableName . '( ' . implode(', ', array_keys($values)) . ') VALUES (';
+        foreach($values as $fieldName => $value) {
+            $sql .= ' :' . $fieldName .', ';
+        }
+        //strip off the last comma
+        $sql = substr($sql, 0 , -2);
+        //add the close parentehese
+        $sql .= ')';
+        
+        $stmt = $db->prepare($sql);
+        //bind the values
+        foreach($values as $fieldName => $value) {
+            if (strlen($value) == 0) {
+                $stmt->bindValue(':' . $fieldName, null);
+            }
+            else {
+                $stmt->bindValue(':' . $fieldName, $value);
+            }
+        }
+        
+        $stmt->execute();
         
         //return the id if successful
-        if($sth->rowCount() == 1) {
+        if($stmt->rowCount() == 1) {
             return $id;
         }
         else {
@@ -108,7 +125,7 @@ class DBHelper {
         //create the query and bind the values
         $sql = 'UPDATE ' . $tableName . ' SET ';
         foreach($values as $fieldName => $value) {
-            $sql .= $fieldName . ' = ?, ';
+            $sql .= $fieldName . ' = :' . $fieldName .', ';
         }
         //strip off the last comma
         $sql = substr($sql, 0 , -2);
@@ -116,8 +133,21 @@ class DBHelper {
         //add id criteia
         $sql .= ' WHERE id = ' . intval($id);
         
+        //print ($sql);
+        //print_r($values);
+        //exit();
         $stmt = $db->prepare($sql);
-        $stmt->execute(array_values($values));
+        //bind the values
+        foreach($values as $fieldName => $value) {
+            if (strlen($value) == 0) {
+                $stmt->bindValue(':' . $fieldName, null);
+            }
+            else {
+                $stmt->bindValue(':' . $fieldName, $value);
+            }
+        }
+        
+        $stmt->execute();
         //return the id if successful
         if($stmt->rowCount() == 1) {
             return true;
