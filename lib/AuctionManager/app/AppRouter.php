@@ -37,6 +37,10 @@ class AppRouter
             $controller = new \AuctionManager\controller\Item($container);
             echo $controller->listAction();
         });
+        $this->app->get('/contact', function() use($container) {
+            
+            echo $container['twig']->render('contact/list.html.twig', array('pageTitle' => 'Contact List'));
+        });
     }
 }
 
