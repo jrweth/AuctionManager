@@ -1,6 +1,7 @@
 {% extends "layout.html.twig" %}
 
 {% block content %}
+    <a href="#/insert/item" />insert</a>
     <table id="itemList">
         <thead></thead>
         <tbody></tbody>
@@ -238,6 +239,10 @@
     app.ItemEditView = Backbone.View.extend({
         el: '#itemEdit',
         initialize: function() {
+            _.bindAll(this, "saveSuccess");
+            this.render();
+        },
+        render: function() {
             var editTemplate = _.template($('#amEdit').html());
             this.$el.html('');
             this.$el.append(editTemplate({fields: app.Item.prototype.getFields(), data: this.model.toJSON()}));
@@ -245,7 +250,6 @@
             var newView = new app.CategoryDropDownView({el: '#itemEdit select', selected: this.model.get('category_id')});
             this.$el.show();
             $('#itemList').hide();
-            _.bindAll(this, "saveSuccess");
         },
         events: {
             'click .amSave' : 'save',
@@ -266,10 +270,23 @@
         },
         cancel: function() {
             this.$el.hide();
+            this.undelegateEvents();
             $('#itemList').show();
         }
     });
 
+    app.Router = Backbone.Router.extend({
+        routes: {
+          'insert/item' : 'insertItem'
+        },
+        insertItem: function(id) {
+            console.log('app.router.params = ' + id); // just for didactical purposes.
+            var itemModel = new app.Item();
+            var itemEditView = new app.ItemEditView({model: itemModel});
+            console.log('try');
+            itemEditView.render();
+        }
+    });
     
     // setup the collections
     app.categoryCollection = new app.CategoryCollection();
@@ -277,6 +294,8 @@
 
     // initialize the list
     app.itemListView = new app.ItemListView();
+    app.router = new app.Router();
+    Backbone.history.start(); 
     
   </script>
 {% endblock %}
