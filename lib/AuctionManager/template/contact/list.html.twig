@@ -1,0 +1,37 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+
+<div id="container"></div>
+
+{% endblock %}
+
+
+{% block customJS %}
+<script type="text/javascript">
+    var init = {
+        options: {
+            debug: true,
+            apiRoot: '{{ webRoot}}api/',
+        },
+        models: {
+            contact: {
+                label: 'Contacts',
+                columns: {
+                    first_name: {},
+                    last_name: {},
+                }
+            },
+            category: {
+                label: 'Categories',
+                columns: {
+                    name: {},
+                }
+            },
+        }
+    };
+    BbS = new BackboneScaffold(init);
+    
+    BbS.setupScaffold('#container');
+</script>
+{% endblock %}
