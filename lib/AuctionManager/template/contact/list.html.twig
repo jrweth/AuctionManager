@@ -20,14 +20,44 @@
                 columns: {
                     first_name: {},
                     last_name: {},
+                    auction_group_id: {
+                        listDisplayType: 'none',
+                        editDisplayType: 'hidden',
+                        defaultValue: '{{ auctionGroupId }}'
+                    }
                 }
             },
             category: {
                 label: 'Categories',
                 columns: {
                     name: {},
+                    auction_group_id: {
+                        listDisplayType: 'none',
+                        editDisplayType: 'hidden',
+                        defaultValue: '{{ auctionGroupId }}'
+                    }
                 }
             },
+            item: {
+                label: 'Items',
+                columns: {
+                    auction_id: {
+                        listDisplayType: 'none',
+                        editDisplayType: 'hidden',
+                        defaultValue: '{{ auctionId }}'
+                    },
+                    title: {},
+                    donor_display_name: {},
+                    description: {},
+                    category_id: {
+                        label: 'category',
+                        editDisplayType: 'collectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'category',
+                        relatedModelToString: function(model) { return model.get('name'); }
+                    }
+                }
+            }
         }
     };
     BbS = new BackboneScaffold(init);
