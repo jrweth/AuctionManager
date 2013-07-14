@@ -27,7 +27,24 @@
 		Backbone = window.Backbone;
 		BackboneScaffold = window.BackboneScaffold = function(options){ this.init(options)};
 	}
-	
+
+    $.fn.serializeObject = function()
+    {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+            if (o[this.name] !== undefined) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+    
 	//options, $scaffold, models, templates
 	
 	BackboneScaffold.prototype.init = function(init) {
@@ -53,13 +70,13 @@
 	BackboneScaffold.prototype.initModels = function() {
 		//assign default values to the models
 		for( var modelName in this.models) {
-			var modelDefaults = {apiName: modelName, label: modelName.replace('_', ' ')};
+			var modelDefaults = {apiName: modelName, label: modelName.replace(new RegExp('_', 'g'), ' ')};
 			_.defaults(this.models[modelName], modelDefaults);
 			_.defaults(this.models[modelName], this.modelDef);
 			
 			//loop through each column and set defaults
 			for( var columnName in this.models[modelName].columns) {
-				var columnDefaults = {label: columnName.replace('_', ' ')};
+				var columnDefaults = {label: columnName.replace(new RegExp('_', 'g'), ' ')};
 				_.defaults(this.models[modelName].columns[columnName], columnDefaults);
 				_.defaults(this.models[modelName].columns[columnName], this.columnDef);
 			}
@@ -126,11 +143,18 @@
 			$model = this.elementGetters.model(this.$scaffold, modelName);
 		}
 		
+		//get the list element
+		var $list = this.elementGetters.modelList(this.$scaffold, modelName);
+		
+		//make sure that the list section is displayed
+		$list.siblings().hide();
+		$list.show();
+		
 		//hide all the other models
-		this.$scaffold.find('.bbs-model').hide();
+		this.$scaffold.find('.bbs-model').hide(100);
 		
 		//show this model
-		$model.show();
+		$model.show(100);
 	};
 	
 	/**
@@ -139,11 +163,19 @@
 	BackboneScaffold.prototype.initModel = function(modelName) {
 		this.debugLog('initializing model:' + modelName);
 		
+		var cols = this.models[modelName].columns
+		var defaults = {};
+		for(var colName in cols){
+			if (cols[colName].defaultValue != undefined) {
+				defaults[colName] = cols[colName].defaultValue;
+			}
+		}
 		//initialize the Backbone Model Class
 		this.models[modelName].backboneModel = Backbone.RelationalModel.extend({
 			urlRoot: this.options.apiRoot + '/' + modelName,
 			modelName: modelName,
-			columns: this.models[modelName].columns
+			columns: this.models[modelName].columns,
+			defaults: defaults
 		});
 		
 		//initialize the Backbone Collection Class
@@ -205,6 +237,13 @@
 	};
 
 	BackboneScaffold.prototype.defaults.modelDef = {
+		toString: function(model, modelDef) {
+			var string = '';
+			for ( var column in modelDef.columns) {
+				string = string + model[columnName] + ', '
+			}
+			string = string.substring(1,string.length -1);
+		}
 	};
 	
 	BackboneScaffold.prototype.defaults.columnDef = {
@@ -215,7 +254,7 @@
 		editDisplayType: 'text',  //none, text, hidden, value, dropdown, autocomplete
 		lookupCollection: '',  //collection to create the options for lookup
 		lookupOptions: [],	 //array of lookup options e.g. [{value: 0; display: 'No'}, {value: 1, display: 'Yes'}]
-		dropDownEmptyOption: 'Select ...'   //for dropdowns an empty option 
+		dropDownEmptyOption: 'Select ...'   //for dropdowns an empty option
 	};
 	
 	BackboneScaffold.prototype.defaults.elementGetters = {
@@ -224,21 +263,28 @@
 		model: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName); },
 		modelList: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName + ' .bbs-modelList'); },
 		modelListTable: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName + ' .bbs-modelListTable'); },
+		modelEdit: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName + ' .bbs-modelEdit'); },
 	};
 	
 	
 	BackboneScaffold.prototype.defaults.templates = {
 		scaffold: '<div class="bbs-scaffold"><nav class="bbs-modelMenu"></nav><div class="bbs-models"></div>',
 		modelMenuItem: '<li class="bbs-modelMenuItem"><a href="#/<%= name %>"><%- label %></a></li>',
-		model: '<div class="bbs-model bbs-model-<%- name %>"> \
+		model: '<div class="bbs-model bbs-model-<%- name %>" style="display: none"> \
 					<div class="bbs-modelHeader"><%- label %></div> \
-					<div class="bbs-modelAddNew bbs-modelSubSection"><button class="bbs-addNew">add new</button></div> \
-					<div class="bbs-modelList bbs-modelSubSection"></div> \
-					<div class="bbs-modelEdit bbs-modelSubSection"></div> \
-					<div class="bbs-modelDetail bbs-modelSubSection"></div> \
+					<div class="bbs-modelSubSections"> \
+						<div class="bbs-modelList bbs-modelSubSection"> \
+							<div class="bbs-modelAddNew"> \
+								<button class="bbs-addNew">add new</button> \
+							</div> \
+						</div> \
+						<div class="bbs-modelEdit bbs-modelSubSection"></div> \
+						<div class="bbs-modelDetail bbs-modelSubSection"></div> \
+					</div> \
 				</div>',
+		//table templates
 		modelListTable: '<table class="bbs-modelListTable"><thead><th>&#160</th> \
-						<% for(columnName in columns) { if (columns[columnName].listDisplay != "none") {%> \
+						<% for(columnName in columns) { if (columns[columnName].listDisplayType != "none") {%> \
 							<th><%- columns[columnName].label %></th> \
 						<% }} %> \
 						</thead><tbody></tbody></table>',
@@ -247,8 +293,25 @@
 				<button class="bbs-delete" onclick="return confirm(\'Are you sure you want to delete this record?\')">delete</button> \
 			</td>',
 		modelListTableValue: '<td><%- value %></td>',
+		//edit templates
+		modelEditText: '<div class="bbs-editColumn"> \
+							<label><%- label %></label> \
+							<div><input class="bbs-editInputText" name="<%= columnName %>" value="<%= value %>" /></div> \
+						</div>',
+		modelEditCollectionDropdown: '<div class="bbs-editColumn"> \
+			<label><%- label %></label> \
+			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
+				<% if(colDef.emptyOption != undefined) { %><option value=""><%- colDef.emptyOption %></option><% } %> \
+				<% scaffold.models[colDef.relatedModelName].backboneCollection.each( function(model) { \
+					print("<option value=\'" + model.get("id") + "\'>" + colDef.relatedModelToString(model) + "</option>"); }) %> \
+			</select></div> \
+		</div>',
+		modelEditHidden: '<input type="hidden" class="bbs-editInputHidden" name="<%= columnName %>" value="<%= value %>" />',
+		modelEditActions: '<div class="bbs-editActions"> \
+				<button class="bbs-save">save</button> \
+				<button class="bbs-cancel"">cancel</button> \
+			</div>',
 		
-		edit: function (model, columns, options) {},
 		detail: function (model, columns, options) {},
 		dropDown: function (model, columns, options) {},
 		lookup: function(model, columns, options) {}
@@ -270,15 +333,15 @@
 				//setup the table
 				var tableTemplate = _.template(this.scaffold.templates.modelListTable);
 				this.$el.find('.bbs-modelList').append(tableTemplate({columns: this.modelDef.columns}));
-				
+
+				_.bindAll(this, "addNew");
 			},
 			events: {
 				'click .bbs-addNew' : 'addNew'
 			},
 			addNew: function() {
 				this.scaffold.debugLog('Add New: ' + this.modelName);
-				var model = new this.modelDef.backboneModel();
-				this.addOne(model);
+				this.scaffold.router.navigate(this.modelName + '/insert', {trigger: true});
 			},
 			addOne: function(model) {
 				var view = new this.scaffold.views.modelTableRow({
@@ -327,9 +390,9 @@
 					//get the template based upon the display type 
 					var displayType = cols[colName].listDisplayType;
 					
-					//default to the value desplay type
+					//default to the text display type
 					if (cellTemplates[displayType] == undefined) {
-						displayType = 'value';
+						displayType = 'text';
 					}
 					
 					//run the template and append to the tr element
@@ -349,7 +412,89 @@
 				this.scaffold.debugLog('deleting ' + this.modelName);
 				this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
 			}
-		})
+		}),
+		// ------------------
+		// Edit View
+		// __________________
+		modelEdit:  Backbone.View.extend({
+			initialize: function() {
+				//set up local variable from those passed in on creation of new object
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.modelDef = this.options.modelDef;
+				this.collection = this.modelDef.backboneCollection;
+				
+				this.scaffold.debugLog('initializing model edit');
+				_.bindAll(this, "saveSuccess");
+				this.render();
+			},
+			render: function() {
+				this.$el.html('<form></form>');
+				var $form = this.$el.children("form");
+				//instantiate all of the column templates
+				var editTemplates = {
+					'text': _.template(this.scaffold.templates.modelEditText),
+					'collectionDropdown': _.template(this.scaffold.templates.modelEditCollectionDropdown),
+					'hidden': _.template(this.scaffold.templates.modelEditHidden),
+					'none': _.template('')
+				};
+				var cols = this.modelDef.columns;
+				var cols = this.modelDef.columns;
+				for( var colName in cols) {
+					//get the template based upon the display type 
+					var displayType = cols[colName].editDisplayType;
+					
+					//default to the text display type
+					if (editTemplates[displayType] == undefined) {
+						displayType = 'text';
+					}
+					
+					//make sure to initialize the other collection
+					if (displayType == 'collectionDropdown') {
+						var relatedModelName = cols[colName].relatedModelName;
+						if(this.scaffold.models[relatedModelName].backboneCollection == undefined) {
+							this.scaffold.initModel(relatedModelName);
+						}
+					}
+					
+					//run the template and append to the tr element
+					$form.append(editTemplates[displayType]({
+						label: cols[colName].label,
+						value: this.model.get(colName),
+						columnName: colName,
+						colDef: cols[colName],
+						scaffold: this.scaffold
+					}));
+				}
+				var editActionsTemplate = _.template(this.scaffold.templates.modelEditActions);
+				this.$el.append(editActionsTemplate({modelName: this.modelName, modelDef: this.modelDef, scaffold: this.scaffold}));
+				
+				//show just this list
+				this.$el.siblings().hide();
+				this.$el.show();
+			},
+			events: {
+				'click .bbs-save' : 'save',
+				'click .bbs-cancel' : 'cancel'
+			},
+			save: function () {
+				this.model.save(this.$el.find('form').serializeObject(), {
+					wait: true,
+					error: function(model, error){ alert(error.responseText);},
+					success: this.saveSuccess
+				});
+			},
+			saveSuccess: function(model, response) {
+				this.$el.hide();
+				this.undelegateEvents();
+				this.collection.add(model);
+				this.scaffold.router.navigate(this.modelName, {trigger: true});
+			},
+			cancel: function() {
+				this.undelegateEvents();
+				this.scaffold.router.navigate(this.modelName, {trigger: true});
+			}
+		}),
 	}
 	BackboneScaffold.prototype.defaults.router = Backbone.Router.extend({
 		routes: {
@@ -366,7 +511,22 @@
 			this.scaffold.displayModel(modelName);
 		},
 		insertModel: function(modelName) {
+			this.scaffold.debugLog("routing insert " + modelName);
 			
+			//check to see if the edit div is already initiated
+			var $edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
+			if($edit.length == 0) {
+				this.scaffold.initModel(modelName);
+				$edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
+			}
+			
+			var view = new this.scaffold.views.modelEdit({
+				el: $edit,
+				scaffold: this.scaffold,
+				modelName: modelName,
+				modelDef: this.scaffold.models[modelName],
+				model: new this.scaffold.models[modelName].backboneModel()
+			});
 		}
 			
 	});
