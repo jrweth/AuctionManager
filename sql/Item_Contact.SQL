@@ -8,11 +8,13 @@ DROP TABLE IF EXISTS Item_Contact
 ;
 CREATE TABLE Item_Contact
 (
+	id INTEGER NOT NULL,
 	item_id INTEGER NOT NULL,
 	contact_id INTEGER NOT NULL,
-	PRIMARY KEY (item_id, contact_id),
-	FOREIGN KEY (contact_id) REFERENCES Contact (id) ON DELETE CASCADE
-	FOREIGN KEY (item_id) REFERENCES Item (id) ON DELETE CASCADE
+	PRIMARY KEY (id),
+	FOREIGN KEY (contact_id) REFERENCES Contact (id) ON DELETE CASCADE,
+	FOREIGN KEY (item_id) REFERENCES Item (id) ON DELETE CASCADE,
+    UNIQUE (item_id, contact_id)
 ) 
 ;
 
