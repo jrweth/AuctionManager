@@ -13,6 +13,7 @@
         options: {
             debug: true,
             apiRoot: '{{ webRoot}}api/',
+            modelInitOrder: ['category', 'contact', 'item', 'item_contact']
         },
         models: {
             contact: {
@@ -51,10 +52,42 @@
                     description: {},
                     category_id: {
                         label: 'category',
+                        listDisplayType: 'collectionLookup',
                         editDisplayType: 'collectionDropdown',
                         emptyOption: 'Choose One...',
                         relatedModelName: 'category',
                         relatedModelToString: function(model) { return model.get('name'); }
+                    }
+                },
+                relatedModels: {
+                    item_contact: {
+                        label: 'Contact',
+                        editDisplayType: 'collectionAssociationMany',
+                        joinColumn: 'id',
+                        relatedJoinColumn: 'item_id',
+                        emptyOption: 'Choose Contact...',
+                        relatedModelName: 'item_contact'
+                    }
+                }
+            },
+            item_contact: {
+                label: 'Donors',
+                columns: {
+                    contact_id: {
+                        label: 'contact',
+                        listDisplayType: 'collectionLookup',
+                        editDisplayType: 'collectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'contact',
+                        relatedModelToString: function(model) { return model.get('last_name') + ', ' + model.get('first_name'); }
+                    },
+                    item_id: {
+                        label: 'item',
+                        listDisplayType: 'collectionLookup',
+                        editDisplayType: 'collectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'item',
+                        relatedModelToString: function(model) { return model.get('title'); }
                     }
                 }
             }
