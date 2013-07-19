@@ -195,11 +195,16 @@
 		var $list = this.elementGetters.modelList(this.$scaffold, modelName);
 		var $model = this.elementGetters.model(this.$scaffold, modelName);
 		
-		if($list.length == 0) {
+		if(this.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
 			this.renderModel(modelName);
 			setTimeout(reDisplayModel(this, modelName), 250);
 			return false;
 		}
+		else if(this.modelDefs[modelName].displayInitializationStatus == 'initializing') {
+			setTimeout(reDisplayModel(this, modelName), 250);
+			return false;
+		}
+		
 		//make sure that the list section is displayed
 		$list.siblings().hide();
 		$list.show();
@@ -251,7 +256,7 @@
 		}
 		//initialize the Backbone Model Class
 		this.modelDefs[modelName].backboneModel = Backbone.RelationalModel.extend({
-			urlRoot: this.options.apiRoot + '/' + modelName,
+			urlRoot: this.options.apiRoot + modelName,
 			modelName: modelName,
 			columns: this.modelDefs[modelName].columns,
 			defaults: defaults
@@ -304,12 +309,13 @@
 	};
 
 	BackboneScaffold.prototype.defaults.modelDef = {
-		toString: function(model, modelDef) {
+		modelToString: function(model, modelDef) {
 			var string = '';
-			for ( var column in modelDef.columns) {
-				string = string + model[columnName] + ', '
+			for ( var columnName in modelDef.columns) {
+				string = string + model.get(columnName) + ', '
 			}
-			string = string.substring(1,string.length -1);
+			string = string.substring(0,string.length -1);
+			return string;
 		},
 		collectionInitializationStatus: 'not initialized',
 		displayInitializationStatus: 'not initialized'
@@ -365,7 +371,7 @@
 		modelListTableCollectionLookup: '<td> \
 			<% if (value) { \
 				var relatedModel = scaffold.modelDefs[colDef.relatedModelName].backboneCollection.get(value);  \
-				print(colDef.relatedModelToString(relatedModel)); \
+				print(scaffold.modelDefs[colDef.relatedModelName].modelToString(relatedModel, scaffold.modelDefs[colDef.relatedModelName])); \
 			} %></td>',
 		//edit templates
 		modelEditText: '<div class="bbs-editColumn"> \
@@ -377,7 +383,9 @@
 			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
 				<% if(colDef.emptyOption != undefined) { %><option value=""><%- colDef.emptyOption %></option><% } %> \
 				<% scaffold.modelDefs[colDef.relatedModelName].backboneCollection.each( function(model) { \
-					print("<option value=\'" + model.get("id") + "\'>" + colDef.relatedModelToString(model) + "</option>"); }) %> \
+					print("<option value=\'" + model.get("id") + "\'>" \
+					+ scaffold.modelDefs[colDef.relatedModelName].modelToString(model, scaffold.modelDefs[colDef.relatedModelName]) \
+					+ "</option>"); }) %> \
 			</select></div> \
 		</div>',
 		modelEditCollectionAssociationMany: '<div class="bbs-editColumn"> \
@@ -482,16 +490,6 @@
 						displayType = 'value';
 					}
 					
-
-					//make sure to initialize the related collection
-					if (displayType == 'collectionLookup') {
-						var relatedModelName = cols[colName].relatedModelName;
-						if(this.scaffold.modelDefs[relatedModelName].backboneCollection == undefined) {
-							this.scaffold.initModel(relatedModelName);
-						}
-						this.scaffold.modelDefs[relatedModelName].backboneCollection.fetch();
-					}
-					
 					//run the template and append to the tr element
 					this.$el.append(cellTemplates[displayType]({
 						value: this.model.get(colName),
@@ -543,6 +541,7 @@
 				}
 				
 				var $form = this.$el.children("form");
+				
 				//instantiate all of the column templates
 				var editTemplates = {
 					'text': _.template(this.scaffold.templates.modelEditText),
@@ -558,7 +557,7 @@
 					var displayType = cols[colName].editDisplayType;
 					
 					//default to the text display type
-					if (editTemplates[displayType] == undefined) {
+					if (editTemplates[displayType] == undefined && displayType != 'collectionEmbeddedForm') {
 						displayType = 'text';
 					}
 					
@@ -570,7 +569,43 @@
 						}
 					}
 					
+					
+					// this will create a whole new embedded form 
+					if( displayType == 'collectionEmbeddedForm' ){
+						
+						//setup some useful handles
+						var columnDef = cols[colName];
+						var relationDef = this.modelDef.relatedModels[columnDef.relatedModelName];
+						var relatedModelDef = this.scaffold.modelDefs[columnDef.relatedModelName];
+						var origEditDisplayType = relatedModelDef.columns[relationDef.relatedJoinColumn].editDisplayType;
+
+						//set the related column in the other model to hidden since we are joining on it
+						relatedModelDef.columns[relationDef.relatedJoinColumn].editDisplayType = 'hidden';
+
+						//create the new div
+						var embeddedDiv = $('<div class="bbs-relatedModelEdit">' + columnDef.label + '</div>');
+						this.$el.append(embeddedDiv);
+
+						//create the related model and set the related field
+						var relatedModel = new relatedModelDef.backboneModel();
+						relatedModel.set(relationDef.relatedJoinColumn, this.model.get(relationDef.joinColumn));
+						
+						//create the new embedded for and push on to the array of embedded forms
+						this.embeddedForms.push(new this.scaffold.views.modelEdit({
+							el: embeddedDiv,
+							scaffold: this.scaffold,
+							modelName: columnDef.relatedModelName,
+							modelDef: relatedModelDef,
+							model: relatedModel,
+							isEmbeddedForm: true
+						}));
+
+						//set the model back to its original
+						relatedModelDef.columns[relationDef.relatedJoinColumn].editDisplayType = origEditDisplayType;
+					}
+					
 					//run the template and append to the tr element
+					if (displayType != 'collectionEmbeddedForm') {
 					$form.append(editTemplates[displayType]({
 						label: cols[colName].label,
 						value: this.model.get(colName),
@@ -578,44 +613,15 @@
 						colDef: cols[colName],
 						scaffold: this.scaffold
 					}));
-				}
-				
-				//loop through related modelDefs
-				for (var relatedModelName in this.modelDef.relatedModels) {
-					
-					//get useful handles
-					var relatedModelDef = this.modelDef.relatedModels[relatedModelName];
-					var relatedScaffoldDef = this.scaffold.modelDefs[relatedModelName];
-					var origEditDisplayType = relatedScaffoldDef.columns[relatedModelDef.relatedJoinColumn].editDisplayType;
-					
-					//set the related column in the other model to hidden since we are joining on it
-					relatedScaffoldDef.columns[relatedModelDef.relatedJoinColumn].editDisplayType = 'hidden';
-					
-					//create the new div
-					var embeddedDiv = $('<div class="bbs-relatedModelEdit">' + relatedModelDef.label + '</div>');
-					this.$el.append(embeddedDiv);
-					
-					//create the related model and set the related field
-					var relatedModel = new relatedScaffoldDef.backboneModel();
-					relatedModel.set(relatedModel.relatedJoinColumn, this.model.get(relatedModel.joinColumn));
-					
-					this.embeddedForms.push(new this.scaffold.views.modelEdit({
-						el: embeddedDiv,
-						scaffold: this.scaffold,
-						modelName: relatedModelName,
-						modelDef: relatedScaffoldDef,
-						model: relatedModel,
-						isEmbeddedForm: true
-					}));
-					
-					//set the model back to its original
-					relatedScaffoldDef.columns[relatedModelDef.relatedJoinColumn].editDisplayType = origEditDisplayType;
+					}
 				}
 				
 				if(this.isEmbeddedForm == false) {
 					var editActionsTemplate = _.template(this.scaffold.templates.modelEditActions);
 					this.$el.append(editActionsTemplate({modelName: this.modelName, modelDef: this.modelDef, scaffold: this.scaffold}));
 				}
+				
+				return this;
 			},
 			events: {
 				'click .bbs-save' : 'save',
@@ -665,12 +671,25 @@
 		insertModel: function(modelName) {
 			this.scaffold.debugLog("routing insert " + modelName);
 			
-			//check to see if the edit div is already initiated
-			var $edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
-			if($edit.length == 0) {
-				this.scaffold.initModel(modelName);
-				$edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
+			//prepare callback with model name saved
+			var reInsertModel = function(scaffold, modelName) {
+				return function() {
+					scaffold.router.insertModel(modelName);
+				}
 			}
+			
+			//check to see if the edit div is already initiated
+			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
+				this.scaffold.displayModel(modelName);
+				setTimeout(reInsertModel(this.scaffold, modelName), 250);
+				return false;
+			}
+			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'initializing') {
+				setTimeout(reInsertModel(this.scaffold, modelName), 250);
+				return false;
+			}
+
+			var $edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
 			
 			var view = new this.scaffold.views.modelEdit({
 				el: $edit,
@@ -679,15 +698,32 @@
 				modelDef: this.scaffold.modelDefs[modelName],
 				model: new this.scaffold.modelDefs[modelName].backboneModel()
 			});
+
+			$edit.siblings().hide();
+			$edit.show();
 		},
 		editModel: function(modelName, id) {
-			this.scaffold.debugLog("routing edit " + modelName + id);
-			//check to see if the edit div is already initiated
-			var $edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
-			if($edit.length == 0) {
-				this.scaffold.initModel(modelName);
-				$edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
+			this.scaffold.debugLog("routing insert " + modelName);
+			
+			//prepare callback with model name saved
+			var reEditModel = function(scaffold, modelName, id) {
+				return function() {
+					scaffold.router.editModel(modelName, id);
+				}
 			}
+			
+			//check to see if the edit div is already initiated
+			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
+				this.scaffold.displayModel(modelName);
+				setTimeout(reEditModel(this.scaffold, modelName, id), 250);
+				return false;
+			}
+			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'initializing') {
+				setTimeout(reEditModel(this.scaffold, modelName, id), 250);
+				return false;
+			}
+			
+			var $edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
 			
 			var view = new this.scaffold.views.modelEdit({
 				el: $edit,
