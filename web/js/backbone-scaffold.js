@@ -197,7 +197,7 @@
 		
 		if($list.length == 0) {
 			this.renderModel(modelName);
-			setTimeout(reDisplayModel(this, modelName));
+			setTimeout(reDisplayModel(this, modelName), 250);
 			return false;
 		}
 		//make sure that the list section is displayed
