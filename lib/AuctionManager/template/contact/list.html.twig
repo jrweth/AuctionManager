@@ -26,6 +26,9 @@
                         editDisplayType: 'hidden',
                         defaultValue: '{{ auctionGroupId }}'
                     }
+                },
+                modelToString: function(model, modelDef) {
+                    return model.get('first_name') + ' ' + model.get('last_name');
                 }
             },
             category: {
@@ -37,6 +40,9 @@
                         editDisplayType: 'hidden',
                         defaultValue: '{{ auctionGroupId }}'
                     }
+                },
+                modelToString: function(model, modelDef) {
+                    return model.get('name');
                 }
             },
             item: {
@@ -55,8 +61,12 @@
                         listDisplayType: 'collectionLookup',
                         editDisplayType: 'collectionDropdown',
                         emptyOption: 'Choose One...',
-                        relatedModelName: 'category',
-                        relatedModelToString: function(model) { return model.get('name'); }
+                        relatedModelName: 'category'
+                    },
+                    item_contacts: {
+                        label: 'Contacts',
+                        editDisplayType: 'collectionEmbeddedForm',
+                        relatedModelName: 'item_contact'
                     }
                 },
                 relatedModels: {
@@ -86,16 +96,14 @@
                         listDisplayType: 'collectionLookup',
                         editDisplayType: 'collectionDropdown',
                         emptyOption: 'Choose One...',
-                        relatedModelName: 'contact',
-                        relatedModelToString: function(model) { return model.get('last_name') + ', ' + model.get('first_name'); }
+                        relatedModelName: 'contact'
                     },
                     item_id: {
                         label: 'item',
                         listDisplayType: 'collectionLookup',
                         editDisplayType: 'collectionDropdown',
                         emptyOption: 'Choose One...',
-                        relatedModelName: 'item',
-                        relatedModelToString: function(model) { return model.get('title'); }
+                        relatedModelName: 'item'
                     }
                 }
             }
