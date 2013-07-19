@@ -28,28 +28,28 @@
 		BackboneScaffold = window.BackboneScaffold = function(options){ this.init(options)};
 	}
 
-    $.fn.serializeObject = function()
-    {
-        var o = {};
-        var a = this.serializeArray();
-        $.each(a, function() {
-            if (o[this.name] !== undefined) {
-                if (!o[this.name].push) {
-                    o[this.name] = [o[this.name]];
-                }
-                o[this.name].push(this.value || '');
-            } else {
-                o[this.name] = this.value || '';
-            }
-        });
-        return o;
-    };
-    
-	//options, $scaffold, models, templates
+	$.fn.serializeObject = function()
+	{
+		var o = {};
+		var a = this.serializeArray();
+		$.each(a, function() {
+			if (o[this.name] !== undefined) {
+				if (!o[this.name].push) {
+					o[this.name] = [o[this.name]];
+				}
+				o[this.name].push(this.value || '');
+			} else {
+				o[this.name] = this.value || '';
+			}
+		});
+		return o;
+	};
+	
+	
 	
 	BackboneScaffold.prototype.init = function(init) {
 		//set the models
-		this.models = init.models;
+		this.modelDefs = init.modelDefs;
 		
 		//loop through the option keys and override defaults if specified
 		for( var optionKey in this.defaults) {
@@ -68,17 +68,17 @@
 	 * Set up some initial model attributes for each model
 	 */
 	BackboneScaffold.prototype.initModels = function() {
-		//assign default values to the models
-		for( var modelName in this.models) {
+		//assign default values to the modelDefs
+		for( var modelName in this.modelDefs) {
 			var modelDefaults = {apiName: modelName, label: modelName.replace(new RegExp('_', 'g'), ' ')};
-			_.defaults(this.models[modelName], modelDefaults);
-			_.defaults(this.models[modelName], this.modelDef);
+			_.defaults(this.modelDefs[modelName], modelDefaults);
+			_.defaults(this.modelDefs[modelName], this.modelDef);
 			
 			//loop through each column and set defaults
-			for( var columnName in this.models[modelName].columns) {
+			for( var columnName in this.modelDefs[modelName].columns) {
 				var columnDefaults = {label: columnName.replace(new RegExp('_', 'g'), ' ')};
-				_.defaults(this.models[modelName].columns[columnName], columnDefaults);
-				_.defaults(this.models[modelName].columns[columnName], this.columnDef);
+				_.defaults(this.modelDefs[modelName].columns[columnName], columnDefaults);
+				_.defaults(this.modelDefs[modelName].columns[columnName], this.columnDef);
 			}
 			
 		}
@@ -95,7 +95,7 @@
 	};
 	
 	/*
-	 * Setup the full scaffolding for all the models passed in 
+	 * Setup the full scaffolding for all the modelDefs passed in 
 	 */
 	BackboneScaffold.prototype.setupScaffold = function(jqContainerSelector) {
 		this.debugLog('setup scaffold');
@@ -105,10 +105,6 @@
 		var scaffoldTemplate = _.template(this.templates.scaffold);
 		this.$scaffold.append(scaffoldTemplate());
 		
-		//initialize the models
-		for( var i in this.options.modelInitOrder) {
-			this.displayModel(this.options.modelInitOrder[i]);
-		}
 		
 		//initialize the menu
 		this.initModelMenu();
@@ -132,39 +128,83 @@
 		var menu = this.elementGetters.modelMenu(this.$scaffold);
 		var template = _.template(this.templates.modelMenuItem);
 		menu.append(template({name: '', label: 'home'}));
-		for(var modelName in this.models) {
-			menu.append(template({name: modelName, label: this.models[modelName].label}));
+		for(var modelName in this.modelDefs) {
+			menu.append(template({name: modelName, label: this.modelDefs[modelName].label}));
 		}
 	};
 	
 	/**
 	 * Display the Model
 	 */
-	BackboneScaffold.prototype.displayModel = function(modelName) {
-		this.debugLog('display model: ' + modelName);
-		//search to see if the model already exists
-		var $model = this.elementGetters.model(this.$scaffold, modelName);
-		if($model.length == 0) {
+	BackboneScaffold.prototype.renderModel = function(modelName) {
+		this.debugLog('rendering model: ' + modelName);
+
+		var reRenderModel = function(scaffold, modelName) {
+			return function() {
+				scaffold.renderModel(modelName);
+			}
+		};
+		
+		//make sure that the collection has already been initialized
+		if(this.modelDefs[modelName].collectionInitializationStatus == 'not initialized') {
 			this.initModel(modelName);
-			$model = this.elementGetters.model(this.$scaffold, modelName);
+			setTimeout(reRenderModel(this, modelName), 250);
+			return false;
 		}
-		if(typeof this.models[modelName].backboneView == 'undefined') {
-			this.models[modelName].backboneView = new this.views.modelView({
+		//if it is in the process of initializing, just wait a bit
+		else if(this.modelDefs[modelName].collectionInitializationStatus == 'initializing') {
+			setTimeout(reRenderModel(this, modelName), 250);
+			return false;
+		}
+		
+
+		//if display is already  initialized, don't try it again
+		if(this.modelDefs[modelName].displayInitializationStatus == 'initialized') {
+			return true;
+		}
+
+		//if display is in process initialized, don't try it again
+		if(this.modelDefs[modelName].displayInitializationStatus == 'initializing') {
+			return false;
+		}
+		
+		if(this.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
+			this.modelDefs[modelName].displayInitializationStatus = 'initializing';
+			this.modelDefs[modelName].backboneView = new this.views.modelView({
 				el: ".bbs-model-" + modelName,
-				modelDef: this.models[modelName],
+				modelDef: this.modelDefs[modelName],
 				modelName: modelName,
 				scaffold: this
 			});
 		}
 		
+
+		this.modelDefs[modelName].displayInitializationStatus = 'initialized';
+	};
+		
+	BackboneScaffold.prototype.displayModel = function(modelName) {
+		this.debugLog('displaying model: ' + modelName);
+		
+		var reDisplayModel = function(scaffold, modelName) {
+			return function() {
+				scaffold.displayModel(modelName);
+			}
+		};
+		//if the view has not yet been set up then render it and come back later
 		//get the list element
 		var $list = this.elementGetters.modelList(this.$scaffold, modelName);
+		var $model = this.elementGetters.model(this.$scaffold, modelName);
 		
+		if($list.length == 0) {
+			this.renderModel(modelName);
+			setTimeout(reDisplayModel(this, modelName));
+			return false;
+		}
 		//make sure that the list section is displayed
 		$list.siblings().hide();
 		$list.show();
 		
-		//hide all the other models
+		//hide all the other modelDefs
 		this.$scaffold.find('.bbs-model').hide(100);
 		
 		//show this model
@@ -177,7 +217,32 @@
 	BackboneScaffold.prototype.initModel = function(modelName) {
 		this.debugLog('initializing model:' + modelName);
 		
-		var cols = this.models[modelName].columns
+		if(this.modelDefs[modelName].collectionInitializationStatus == 'not initialized') {
+			this.modelDefs[modelName].collectionInitializationStatus = 'initializing';
+		}
+		
+		var reInitModel = function(scaffold, modelName) {
+			return function(collection) {
+				scaffold.initModel(modelName);
+			}
+		};
+		
+		//check to see if related model are already instantiaed, if not instantiate and then come back and initialize this one
+		for(var relatedModelName in this.modelDefs[modelName].relatedModels) {
+			//related model not yet instantiated - instantiate now and come back later
+			if(this.modelDefs[relatedModelName].collectionInitializationStatus == 'not initialized') {
+				this.initModel(relatedModelName);
+				setTimeout(reInitModel(this, modelName), 250);
+				return false;
+			}
+			//related model in the process of being instantiaed - come back later
+			else if(this.modelDefs[relatedModelName].collectionInitializationStatus == 'initializing') {
+				setTimeout(reInitModel(this, modelName), 250);
+				return false;
+			}
+		}
+		
+		var cols = this.modelDefs[modelName].columns
 		var defaults = {};
 		for(var colName in cols){
 			if (cols[colName].defaultValue != undefined) {
@@ -185,46 +250,40 @@
 			}
 		}
 		//initialize the Backbone Model Class
-		this.models[modelName].backboneModel = Backbone.RelationalModel.extend({
+		this.modelDefs[modelName].backboneModel = Backbone.RelationalModel.extend({
 			urlRoot: this.options.apiRoot + '/' + modelName,
 			modelName: modelName,
-			columns: this.models[modelName].columns,
+			columns: this.modelDefs[modelName].columns,
 			defaults: defaults
 		});
 		
 		//initialize the Backbone Collection Class
 		var Collection = Backbone.Collection.extend({
-			model: this.models[modelName].backboneModel,
+			model: this.modelDefs[modelName].backboneModel,
 			url: this.options.apiRoot + '/' + modelName
 		});
 		
 		//instantiate the Backbone Collection Class and add to our model
-		this.models[modelName].backboneCollection = new Collection();
+		this.modelDefs[modelName].backboneCollection = new Collection();
+		
+		var fetchCollectionSuccess = function(scaffold, modelName) {
+			return function(collection) {
+				scaffold.debugLog(modelName + ' collection initialized');
+				scaffold.modelDefs[modelName].collectionInitializationStatus = 'initialized';
+				//create the model div
+				
+				var modelDivTemplate = _.template(scaffold.templates.model);
+				scaffold.$scaffold.append(modelDivTemplate({name: modelName, label: scaffold.modelDefs[modelName].label}));
+			}
+		};
 		
 		//fetch the data
-		this.models[modelName].backboneCollection.fetch();
-		
-		//create the model div
-		var modelDivTemplate = _.template(this.templates.model);
-		this.$scaffold.append(modelDivTemplate({name: modelName, label: this.models[modelName].label}));
-		
+		this.modelDefs[modelName].backboneCollection.fetch({
+			success: fetchCollectionSuccess(this, modelName)
+		});
+
 	};
 	
-	/**
-	 * Initialize the model table
-	 */
-	BackboneScaffold.prototype.initModelListTable = function(modelName) {
-		this.debugLog('initialize model list:' + modelName);
-		
-		var $modelList = this.elementGetters.modelList(this.$scaffold, modelName);
-		
-		//create the table
-		var template = _.template(this.templates.modelListTable);
-		$modelList.append(template({columns: this.models[modelName].columns}));
-		
-		//create the view for each row
-		
-	};
 	
 	//------------------------------
 	// Standard Template Definitions
@@ -251,7 +310,9 @@
 				string = string + model[columnName] + ', '
 			}
 			string = string.substring(1,string.length -1);
-		}
+		},
+		collectionInitializationStatus: 'not initialized',
+		displayInitializationStatus: 'not initialized'
 	};
 	
 	BackboneScaffold.prototype.defaults.columnDef = {
@@ -303,7 +364,7 @@
 		modelListTableValue: '<td><%- value %></td>',
 		modelListTableCollectionLookup: '<td> \
 			<% if (value) { \
-				var relatedModel = scaffold.models[colDef.relatedModelName].backboneCollection.get(value);  \
+				var relatedModel = scaffold.modelDefs[colDef.relatedModelName].backboneCollection.get(value);  \
 				print(colDef.relatedModelToString(relatedModel)); \
 			} %></td>',
 		//edit templates
@@ -315,7 +376,7 @@
 			<label><%- label %></label> \
 			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
 				<% if(colDef.emptyOption != undefined) { %><option value=""><%- colDef.emptyOption %></option><% } %> \
-				<% scaffold.models[colDef.relatedModelName].backboneCollection.each( function(model) { \
+				<% scaffold.modelDefs[colDef.relatedModelName].backboneCollection.each( function(model) { \
 					print("<option value=\'" + model.get("id") + "\'>" + colDef.relatedModelToString(model) + "</option>"); }) %> \
 			</select></div> \
 		</div>',
@@ -323,7 +384,7 @@
 			<label><%- label %></label> \
 			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
 				<% if(colDef.emptyOption != undefined) { %><option value=""><%- colDef.emptyOption %></option><% } %> \
-				<% scaffold.models[colDef.relatedModelName].backboneCollection.each( function(model) { \
+				<% scaffold.modelDefs[colDef.relatedModelName].backboneCollection.each( function(model) { \
 					print("<option value=\'" + model.get("id") + "\'>" + colDef.relatedModelToString(model) + "</option>"); }) %> \
 			</select></div> \
 		</div>',
@@ -352,10 +413,13 @@
 				this.collection.on('reset', this.addAll, this);
 				
 				//setup the table
+				console.log('adding another table ###################')
 				var tableTemplate = _.template(this.scaffold.templates.modelListTable);
 				this.$el.find('.bbs-modelList').append(tableTemplate({columns: this.modelDef.columns}));
-
+				
 				_.bindAll(this, "addNew");
+
+				this.addAll();
 			},
 			events: {
 				'click .bbs-addNew' : 'addNew'
@@ -422,10 +486,10 @@
 					//make sure to initialize the related collection
 					if (displayType == 'collectionLookup') {
 						var relatedModelName = cols[colName].relatedModelName;
-						if(this.scaffold.models[relatedModelName].backboneCollection == undefined) {
+						if(this.scaffold.modelDefs[relatedModelName].backboneCollection == undefined) {
 							this.scaffold.initModel(relatedModelName);
 						}
-						this.scaffold.models[relatedModelName].backboneCollection.fetch();
+						this.scaffold.modelDefs[relatedModelName].backboneCollection.fetch();
 					}
 					
 					//run the template and append to the tr element
@@ -501,7 +565,7 @@
 					//make sure to initialize the other collection
 					if (displayType == 'collectionDropdown') {
 						var relatedModelName = cols[colName].relatedModelName;
-						if(this.scaffold.models[relatedModelName].backboneCollection == undefined) {
+						if(this.scaffold.modelDefs[relatedModelName].backboneCollection == undefined) {
 							this.scaffold.initModel(relatedModelName);
 						}
 					}
@@ -516,12 +580,12 @@
 					}));
 				}
 				
-				//loop through related models
+				//loop through related modelDefs
 				for (var relatedModelName in this.modelDef.relatedModels) {
 					
 					//get useful handles
 					var relatedModelDef = this.modelDef.relatedModels[relatedModelName];
-					var relatedScaffoldDef = this.scaffold.models[relatedModelName];
+					var relatedScaffoldDef = this.scaffold.modelDefs[relatedModelName];
 					var origEditDisplayType = relatedScaffoldDef.columns[relatedModelDef.relatedJoinColumn].editDisplayType;
 					
 					//set the related column in the other model to hidden since we are joining on it
@@ -533,7 +597,6 @@
 					
 					//create the related model and set the related field
 					var relatedModel = new relatedScaffoldDef.backboneModel();
-					alert(this.model.get(relatedModel.joinColumn));
 					relatedModel.set(relatedModel.relatedJoinColumn, this.model.get(relatedModel.joinColumn));
 					
 					this.embeddedForms.push(new this.scaffold.views.modelEdit({
@@ -567,7 +630,7 @@
 			},
 			saveSuccess: function(model, response) {
 				//save the embedded forms
-				for(var key in this.embeddedForms) {
+				for(var key in this.embeddedForms) { 
 					this.embeddedForms[key].$el.find("[name='item_id']").val(model.get('id'));
 					this.embeddedForms[key].save();
 				}
@@ -613,8 +676,8 @@
 				el: $edit,
 				scaffold: this.scaffold,
 				modelName: modelName,
-				modelDef: this.scaffold.models[modelName],
-				model: new this.scaffold.models[modelName].backboneModel()
+				modelDef: this.scaffold.modelDefs[modelName],
+				model: new this.scaffold.modelDefs[modelName].backboneModel()
 			});
 		},
 		editModel: function(modelName, id) {
@@ -630,8 +693,8 @@
 				el: $edit,
 				scaffold: this.scaffold,
 				modelName: modelName,
-				modelDef: this.scaffold.models[modelName],
-				model: this.scaffold.models[modelName].backboneCollection.get(id)
+				modelDef: this.scaffold.modelDefs[modelName],
+				model: this.scaffold.modelDefs[modelName].backboneCollection.get(id)
 			});
 			
 			$edit.siblings().hide();
