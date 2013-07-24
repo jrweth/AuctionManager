@@ -47,6 +47,9 @@
             },
             item: {
                 label: 'Items',
+                modelToString: function(model, modelDef) {
+                    return model.get('title');
+                },
                 columns: {
                     auction_id: {
                         listDisplayType: 'none',
@@ -64,32 +67,32 @@
                         relatedModelName: 'category'
                     },
                     item_contacts: {
-                        label: 'Contacts',
+                        label: 'contacts',
+                        listDisplayType: 'collectionHasMany',
                         editDisplayType: 'collectionEmbeddedForm',
                         relatedModelName: 'item_contact'
                     }
                 },
                 relatedModels: {
                     item_contact: {
-                        label: 'Contact',
-                        editDisplayType: 'collectionAssociationMany',
                         joinColumn: 'id',
                         relatedJoinColumn: 'item_id',
-                        emptyOption: 'Choose Contact...',
                         relatedModelName: 'item_contact'
                     },
                     category: {
-                        label: 'Contact',
-                        editDisplayType: 'collectionAssociationOne',
                         joinColumn: 'category_id',
                         relatedJoinColumn: 'id',
-                        emptyOption: 'Choose Category...',
-                        relatedModelName: 'item_contact'
+                        relatedModelName: 'category'
                     }
                 }
             },
             item_contact: {
                 label: 'Donors',
+                modelToString: function(model, modelDef, scaffold) {
+                    var contactModelDef = scaffold.modelDefs.contact;
+                    var contactModel = contactModelDef.backboneCollection.findWhere({id: model.get('contact_id')});
+                    return contactModelDef.modelToString(contactModel, contactModelDef, scaffold);
+                },
                 columns: {
                     contact_id: {
                         label: 'contact',
@@ -105,6 +108,18 @@
                         emptyOption: 'Choose One...',
                         relatedModelName: 'item'
                     }
+                },
+                relatedModels: {
+                    contact: {
+                        joinColumn: 'contact_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'contact'
+                    },
+                    item: {
+                        joinColumn: 'item_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'item'
+                    },
                 }
             }
         }
