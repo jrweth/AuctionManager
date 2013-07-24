@@ -217,7 +217,7 @@
 	};
 	
 	/**
-	 * Initialize the model
+	 * Initialize the model collection
 	 */
 	BackboneScaffold.prototype.initModel = function(modelName) {
 		this.debugLog('initializing model:' + modelName);
@@ -237,13 +237,6 @@
 			//related model not yet instantiated - instantiate now and come back later
 			if(this.modelDefs[relatedModelName].collectionInitializationStatus == 'not initialized') {
 				this.initModel(relatedModelName);
-				setTimeout(reInitModel(this, modelName), 250);
-				return false;
-			}
-			//related model in the process of being instantiaed - come back later
-			else if(this.modelDefs[relatedModelName].collectionInitializationStatus == 'initializing') {
-				setTimeout(reInitModel(this, modelName), 250);
-				return false;
 			}
 		}
 		
@@ -309,7 +302,7 @@
 	};
 
 	BackboneScaffold.prototype.defaults.modelDef = {
-		modelToString: function(model, modelDef) {
+		modelToString: function(model, modelDef, scaffold) {
 			var string = '';
 			for ( var columnName in modelDef.columns) {
 				string = string + model.get(columnName) + ', '
@@ -373,6 +366,9 @@
 				var relatedModel = scaffold.modelDefs[colDef.relatedModelName].backboneCollection.get(value);  \
 				print(scaffold.modelDefs[colDef.relatedModelName].modelToString(relatedModel, scaffold.modelDefs[colDef.relatedModelName])); \
 			} %></td>',
+		modelListTableCollectionHasMany: '<td><ul><% \
+				for(var index in relatedModels) print("<li>" + relatedModelDef.modelToString(relatedModels[index], relatedModelDef, scaffold) + "</li>") \
+			%></ul></td>',
 		//edit templates
 		modelEditText: '<div class="bbs-editColumn"> \
 							<label><%- label %></label> \
@@ -383,9 +379,11 @@
 			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
 				<% if(colDef.emptyOption != undefined) { %><option value=""><%- colDef.emptyOption %></option><% } %> \
 				<% scaffold.modelDefs[colDef.relatedModelName].backboneCollection.each( function(model) { \
-					print("<option value=\'" + model.get("id") + "\'>" \
-					+ scaffold.modelDefs[colDef.relatedModelName].modelToString(model, scaffold.modelDefs[colDef.relatedModelName]) \
-					+ "</option>"); }) %> \
+					print("<option value=\'" + model.get("id") + "\'"); \
+					if(model.get("id") == value) print("selected=\'selected\'"); \
+					print(">" + scaffold.modelDefs[colDef.relatedModelName].modelToString(model, scaffold.modelDefs[colDef.relatedModelName])); \
+					print("</option>");\
+				}) %> \
 			</select></div> \
 		</div>',
 		modelEditCollectionAssociationMany: '<div class="bbs-editColumn"> \
@@ -420,6 +418,18 @@
 				this.collection.on('add', this.addAll, this);
 				this.collection.on('reset', this.addAll, this);
 				
+				//bind collection events for related tables
+				var relatedModels = this.scaffold.modelDefs[this.modelName].relatedModels
+				for(var relatedModelKey in relatedModels)
+				{
+					var relatedModelName = relatedModels[relatedModelKey].relatedModelName;
+					var relatedCollection = this.scaffold.modelDefs[relatedModelName].backboneCollection;
+					relatedCollection.on('add', this.addAll, this);
+					relatedCollection.on('reset', this.addAll, this);
+					relatedCollection.on('remove', this.addAll, this);
+					relatedCollection.on('change', this.addAll, this);
+				}
+				
 				//setup the table
 				console.log('adding another table ###################')
 				var tableTemplate = _.template(this.scaffold.templates.modelListTable);
@@ -446,6 +456,7 @@
 				this.$el.find('.bbs-modelListTable tbody').append(view.render().$el);
 			},
 			addAll: function() {
+				this.scaffold.debugLog('Adding All rows for model ' + this.modelName);
 				this.$el.find('.bbs-modelListTable tbody').html(''); // clean the list
 				this.collection.each(this.addOne, this);
 			},
@@ -476,12 +487,15 @@
 				var cellTemplates = {
 					'value': _.template(this.scaffold.templates.modelListTableValue),
 					'collectionLookup': _.template(this.scaffold.templates.modelListTableCollectionLookup),
+					'collectionHasMany': _.template(this.scaffold.templates.modelListTableCollectionHasMany),
 					'none': _.template('')
 				};
 				
 				//loop through all of the columns and append each
 				var cols = this.modelDef.columns;
 				for( var colName in cols) {
+					var colDef = cols[colName];
+					
 					//get the template based upon the display type 
 					var displayType = cols[colName].listDisplayType;
 					
@@ -490,12 +504,30 @@
 						displayType = 'value';
 					}
 					
+					switch (displayType) {
+						case 'collectionHasMany': 
+							var relatedModelDef = this.scaffold.modelDefs[colDef.relatedModelName];
+							var relationDef = this.modelDef.relatedModels[colDef.relatedModelName];
+							var whereDef = {};
+							whereDef[relationDef.relatedJoinColumn] = this.model.get(relationDef.joinColumn);
+							var relatedModels = relatedModelDef.backboneCollection.where(whereDef);
+							var templateParams = {
+								relatedModelDef: relatedModelDef,
+								relatedModels: relatedModels,
+								scaffold: this.scaffold
+							};
+							break;
+						case 'value':
+						default: 
+							var templateParams = {
+								value: this.model.get(colName),
+								colDef: colDef,
+								scaffold: this.scaffold
+							}
+					}
+
 					//run the template and append to the tr element
-					this.$el.append(cellTemplates[displayType]({
-						value: this.model.get(colName),
-						colDef: cols[colName],
-						scaffold: this.scaffold
-					}));
+					this.$el.append(cellTemplates[displayType](templateParams));
 				}
 				
 				return this;
@@ -585,12 +617,20 @@
 						//create the new div
 						var embeddedDiv = $('<div class="bbs-relatedModelEdit">' + columnDef.label + '</div>');
 						this.$el.append(embeddedDiv);
-
-						//create the related model and set the related field
-						var relatedModel = new relatedModelDef.backboneModel();
-						relatedModel.set(relationDef.relatedJoinColumn, this.model.get(relationDef.joinColumn));
 						
-						//create the new embedded for and push on to the array of embedded forms
+						//search through the collection to see if the related model is already set
+						var whereDef = {};
+						whereDef[relationDef.relatedJoinColumn] = this.model.get(relationDef.joinColumn);
+						var relatedModels = relatedModelDef.backboneCollection.where(whereDef);
+						if(relatedModels.length > 0) {
+							var relatedModel = relatedModels[0];
+						}
+						else {
+							var relatedModel = new relatedModelDef.backboneModel();
+							relatedModel.set(relationDef.relatedJoinColumn, this.model.get(relationDef.joinColumn));
+						}
+						
+						//create the new embedded form and push on to the array of embedded forms
 						this.embeddedForms.push(new this.scaffold.views.modelEdit({
 							el: embeddedDiv,
 							scaffold: this.scaffold,
