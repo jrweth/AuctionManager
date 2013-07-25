@@ -426,7 +426,7 @@
 					var relatedCollection = this.scaffold.modelDefs[relatedModelName].backboneCollection;
 					relatedCollection.on('add', this.addAll, this);
 					relatedCollection.on('reset', this.addAll, this);
-					relatedCollection.on('remove', this.addAll, this);
+					relatedCollection.on('remove', this.relatedModelRemoved, this);
 					relatedCollection.on('change', this.addAll, this);
 				}
 				
@@ -460,6 +460,10 @@
 				this.$el.find('.bbs-modelListTable tbody').html(''); // clean the list
 				this.collection.each(this.addOne, this);
 			},
+			relatedModelRemoved: function() {
+				this.collection.fetch();
+				this.collection.each(this.addOne, this);
+			}
 		}),
 		
 		modelTableRow: Backbone.View.extend({
