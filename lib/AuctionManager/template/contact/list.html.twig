@@ -22,12 +22,12 @@
                     first_name: {},
                     last_name: {},
                     auction_group_id: {
-                        listDisplayType: 'none',
+                        listDisplayView: 'none',
                         editDisplayType: 'hidden',
                         defaultValue: '{{ auctionGroupId }}'
                     }
                 },
-                modelToString: function(model, modelDef) {
+                modelToString: function(model, modelDef, scaffold) {
                     return model.get('first_name') + ' ' + model.get('last_name');
                 }
             },
@@ -36,23 +36,23 @@
                 columns: {
                     name: {},
                     auction_group_id: {
-                        listDisplayType: 'none',
+                        listDisplayView: 'none',
                         editDisplayType: 'hidden',
                         defaultValue: '{{ auctionGroupId }}'
                     }
                 },
-                modelToString: function(model, modelDef) {
+                modelToString: function(model, modelDef, scaffold) {
                     return model.get('name');
                 }
             },
             item: {
                 label: 'Items',
-                modelToString: function(model, modelDef) {
+                modelToString: function(model, modelDef, scaffold) {
                     return model.get('title');
                 },
                 columns: {
                     auction_id: {
-                        listDisplayType: 'none',
+                        listDisplayView: 'none',
                         editDisplayType: 'hidden',
                         defaultValue: '{{ auctionId }}'
                     },
@@ -61,16 +61,18 @@
                     description: {},
                     category_id: {
                         label: 'category',
-                        listDisplayType: 'collectionLookup',
+                        listDisplayView: 'modelColumnLookup',
                         editDisplayType: 'collectionDropdown',
                         emptyOption: 'Choose One...',
                         relatedModelName: 'category'
                     },
                     item_contacts: {
                         label: 'contacts',
-                        listDisplayType: 'collectionHasMany',
+                        listDisplayView: 'modelColumnManyToManyModelToString',
+                        listManyToManyModelName: 'contact',
                         editDisplayType: 'collectionEmbeddedForm',
-                        relatedModelName: 'item_contact'
+                        relatedModelKey: 'item_contact',
+                        linkedModelKey: 'contact'
                     }
                 },
                 relatedModels: {
@@ -96,14 +98,14 @@
                 columns: {
                     contact_id: {
                         label: 'contact',
-                        listDisplayType: 'collectionLookup',
+                        listDisplayView: 'modelColumnLookup',
                         editDisplayType: 'collectionDropdown',
                         emptyOption: 'Choose One...',
                         relatedModelName: 'contact'
                     },
                     item_id: {
                         label: 'item',
-                        listDisplayType: 'collectionLookup',
+                        listDisplayView: 'modelColumnLookup',
                         editDisplayType: 'collectionDropdown',
                         emptyOption: 'Choose One...',
                         relatedModelName: 'item'
