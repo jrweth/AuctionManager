@@ -4,28 +4,31 @@
 --  DBMS       : MySql 
 --  -------------------------------------------------- 
 
-DROP TABLE IF EXISTS Contact
-;
-CREATE TABLE Contact
-(
-	id INTEGER NOT NULL,
-	auction_group_id INTEGER NOT NULL,
-	first_name VARCHAR(50),
-	middle_name VARCHAR(50),
-	last_name VARCHAR(50),
-	organization_name VARCHAR(50),
-	email VARCHAR(100),
-	phone VARCHAR(50),
-	street1 VARCHAR(255),
-	street2 VARCHAR(255),
-	city VARCHAR(255),
-	state VARCHAR(50),
-	zip VARCHAR(50),
-	notes TEXT,
-	PRIMARY KEY (id),
-	FOREIGN KEY (auction_group_id) REFERENCES Auction_Group (id) ON DELETE CASCADE
-) 
-;
+    DROP TABLE IF EXISTS Contact
+    ;
+    CREATE TABLE Contact
+    (
+    	id INTEGER NOT NULL,
+    	auction_group_id INTEGER NOT NULL,
+    	first_name VARCHAR(50),
+    	middle_name VARCHAR(50),
+    	spouse_name VARCHAR(200),
+    	last_name VARCHAR(50),
+    	organization_name VARCHAR(50),
+    	affiliation_id INTEGER,
+    	email VARCHAR(100),
+    	phone VARCHAR(50),
+    	street1 VARCHAR(255),
+    	street2 VARCHAR(255),
+    	city VARCHAR(255),
+    	state VARCHAR(50),
+    	zip VARCHAR(50),
+    	notes TEXT,
+    	PRIMARY KEY (id),
+    	FOREIGN KEY (auction_group_id) REFERENCES Auction_Group (id) ON DELETE CASCADE
+    	FOREIGN KEY (affiliation_id) REFERENCES Affiliation (id) ON DELETE SET NULL
+    ) 
+    ;
 
 
 
