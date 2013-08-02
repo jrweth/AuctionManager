@@ -34,7 +34,7 @@ function outputResult($action, $success = true, $id = 0)
         'action' => $action,
         'success' => $success,
         'id' => intval($id),
-    ));
+    ), JSON_NUMERIC_CHECK);
 }
 
 $app->get('/', function () use($db) {
@@ -42,12 +42,19 @@ $app->get('/', function () use($db) {
 });
 
 $app->get('/:tableName', function ($tableName) use ($db) {
-    echo json_encode(DBHelper::getTableRecords($db, $tableName));
+    switch($tableName) {
+        case 'contact': $orderBy = 'first_name, last_name, organization_name'; break;
+        case 'affiliation': $orderBy = 'name'; break;
+        case 'category': $orderBy = 'name'; break;
+        case 'item': $orderBy = 'title'; break;
+        default: $orderBy = null;
+    }
+    echo json_encode(DBHelper::getTableRecords($db, $tableName, $orderBy), JSON_NUMERIC_CHECK);
 });
 
 $app->get('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
     if($record = DBHelper::getTableRecord($db, $tableName, $id)) {
-        echo json_encode($record);
+        echo json_encode($record, JSON_NUMERIC_CHECK);
     }
     else {
         $app->halt(500, 'An Error Occured trying to retrieve the records.');
@@ -58,7 +65,7 @@ $app->post('/:tableName', function ($tableName) use ($db, $app) {
     $values = json_decode($app->request()->getBody(), true);
     if($id = DBHelper::insertTableRecord($db, $tableName, $values)) {
         $values['id'] = $id;
-        echo json_encode($values);
+        echo json_encode($values, JSON_NUMERIC_CHECK);
     }
     else {
         $app->halt(500, 'An Error Occured trying to save the new record.');
@@ -69,7 +76,7 @@ $app->post('/:tableName', function ($tableName) use ($db, $app) {
 $app->put('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
     $values = json_decode($app->request()->getBody(), true);
     if(DBHelper::updateTableRecord($db, $tableName, $id, $values)) {
-        echo json_encode($values);
+        echo json_encode($values, JSON_NUMERIC_CHECK);
     }
     else {
         $app->halt(500, 'An Error Occured trying to save the record.');
