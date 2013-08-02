@@ -27,20 +27,10 @@ class AppRouter
             echo $container['twig']->render('layout.html.twig');
         });
         
-        $this->app->get('/category', function() use($container) {
-        
-            $controller = new \AuctionManager\controller\Category($container);
-            echo $controller->listAction();
-        });
-        $this->app->get('/item', function() use($container) {
-        
-            $controller = new \AuctionManager\controller\Item($container);
-            echo $controller->listAction();
-        });
-        $this->app->get('/contact', function() use($container) {
-            
+        $this->app->get('/entry', function() use($container) {
             echo $container['twig']->render('contact/list.html.twig', array('pageTitle' => 'Contact List'));
         });
+        
     }
 }
 
