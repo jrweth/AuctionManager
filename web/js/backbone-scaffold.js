@@ -127,9 +127,11 @@
 		//get the 
 		var menu = this.elementGetters.modelMenu(this.$scaffold);
 		var template = _.template(this.templates.modelMenuItem);
-		menu.append(template({name: '', label: 'home'}));
+		
 		for(var modelName in this.modelDefs) {
-			menu.append(template({name: modelName, label: this.modelDefs[modelName].label}));
+			if(this.modelDefs[modelName].showInMenu) {
+				menu.append(template({name: modelName, label: this.modelDefs[modelName].label}));
+			}
 		}
 	};
 	
@@ -271,7 +273,8 @@
 				//create the model div
 				
 				var modelDivTemplate = _.template(scaffold.templates.model);
-				scaffold.$scaffold.append(modelDivTemplate({name: modelName, label: scaffold.modelDefs[modelName].label}));
+				
+				scaffold.$scaffold.find('.bbs-models').append(modelDivTemplate({name: modelName, label: scaffold.modelDefs[modelName].label}));
 			}
 		};
 		
@@ -310,6 +313,7 @@
 			string = string.substring(0,string.length -1);
 			return string;
 		},
+		showInMenu: true,
 		collectionInitializationStatus: 'not initialized',
 		displayInitializationStatus: 'not initialized'
 	};
@@ -319,7 +323,8 @@
 		length: '',		   //maximum length of the string
 		label: '',			//if not set defaults to column key
 		listDisplayView: 'modelColumnValue', //none, modelColumnValue, modelColumnManyToManyModelToString, modelColumnHasManyModeltoString, modelColumnDate, lookup
-		editDisplayType: 'text',  //none, text, hidden, value, dropdown, autocomplete
+		editDisplayView: 'modelEditColumnText',  //
+		editDisplayTemplate: 'modelEditColumnText',  //
 		lookupCollection: '',  //collection to create the options for lookup
 		lookupOptions: [],	 //array of lookup options e.g. [{value: 0; display: 'No'}, {value: 1, display: 'Yes'}]
 		dropDownEmptyOption: 'Select ...'   //for dropdowns an empty option
@@ -337,6 +342,7 @@
 	
 	BackboneScaffold.prototype.defaults.templates = {
 		scaffold: '<div class="bbs-scaffold"><nav class="bbs-modelMenu"></nav><div class="bbs-models"></div>',
+		modelMenu: '<div></div>',
 		modelMenuItem: '<li class="bbs-modelMenuItem"><a href="#/<%= name %>"><%- label %></a></li>',
 		model: '<div class="bbs-model bbs-model-<%- name %>" style="display: none"> \
 					<div class="bbs-modelHeader"><%- label %></div> \
@@ -358,7 +364,7 @@
 						</thead><tbody></tbody></table>',
 		modelListTableActions: '<td> \
 				<button class="bbs-edit">edit</button> \
-				<button class="bbs-delete" onclick="return confirm(\'Are you sure you want to delete this record?\')">delete</button> \
+				<button class="bbs-delete">delete</button> \
 			</td>',
 		modelColumnValue: '<%- value %>',
 		modelListTableCollectionLookup: '<td> \
@@ -370,22 +376,21 @@
 				for(var index in relatedModels) print("<li>" + relatedModelDef.modelToString(relatedModels[index], relatedModelDef, scaffold) + "</li>") \
 			%></ul></td>',
 		//edit templates
-		modelEditText: '<div class="bbs-editColumn"> \
-							<label><%- label %></label> \
-							<div><input class="bbs-editInputText" name="<%= columnName %>" value="<%= value %>" /></div> \
-						</div>',
-		modelEditCollectionDropdown: '<div class="bbs-editColumn"> \
-			<label><%- label %></label> \
+		modelEditColumnText: '<label><%- label %></label> \
+						<div><input class="bbs-editInputText" name="<%= columnName %>" value="<%= value %>" /></div>',
+		modelEditColumnTextArea: '<label><%- label %></label> \
+			<div><textarea class="bbs-editInputTextArea" name="<%= columnName %>"><%= value %></textarea></div>',
+		modelEditColumnDropdown: '<label><%- label %></label> \
 			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
-				<% if(colDef.emptyOption != undefined) { %><option value=""><%- colDef.emptyOption %></option><% } %> \
-				<% scaffold.modelDefs[colDef.relatedModelName].backboneCollection.each( function(model) { \
-					print("<option value=\'" + model.get("id") + "\'"); \
-					if(model.get("id") == value) print("selected=\'selected\'"); \
-					print(">" + scaffold.modelDefs[colDef.relatedModelName].modelToString(model, scaffold.modelDefs[colDef.relatedModelName], scaffold)); \
-					print("</option>");\
-				}) %> \
-			</select></div> \
-		</div>',
+				<% if(emptyOption != undefined) { %> \
+					<option value=""><%- emptyOption %></option> \
+				<% } %> \
+				<% for( var optionValue in options) { %> \
+					<option value="<%- optionValue %>" \
+					<% if(optionValue == value) { %> selected="selected" <% } %> \
+					><%- options[optionValue] %></option> \
+				<% } %> \
+			</select></div>',
 		modelEditCollectionAssociationMany: '<div class="bbs-editColumn"> \
 			<label><%- label %></label> \
 			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
@@ -394,12 +399,13 @@
 					print("<option value=\'" + model.get("id") + "\'>" + colDef.relatedModelToString(model) + "</option>"); }) %> \
 			</select></div> \
 		</div>',
-		modelEditHidden: '<input type="hidden" class="bbs-editInputHidden" name="<%= columnName %>" value="<%= value %>" />',
+		modelEditColumnHidden: '<input type="hidden" class="bbs-editInputHidden" name="<%= columnName %>" value="<%= value %>" />',
 		modelEditActions: '<div class="bbs-editActions"> \
 				<button class="bbs-save">save</button> \
 				<button class="bbs-cancel"">cancel</button> \
 			</div>',
-		
+		modelEditRemoveRelated: '<a class="bbs-delete" style="cursor: pointer">remove</a>',
+		modelEditAddRelated: '<a class="bbs-addRelated" style="cursor: pointer">add</a>',
 		detail: function (model, columns, options) {},
 		dropDown: function (model, columns, options) {},
 		lookup: function(model, columns, options) {}
@@ -519,8 +525,10 @@
 				this.scaffold.router.navigate(this.modelName + '/edit/' + this.model.get('id'), {trigger: true});
 			},
 			delete: function() {
-				this.scaffold.debugLog('deleting ' + this.modelName);
-				this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
+				if(confirm('Are you sure you want to delete this record?')) {
+					this.scaffold.debugLog('deleting ' + this.modelName);
+					this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
+				}
 			}
 		}),
 		// ------------------
@@ -541,6 +549,8 @@
 					this.isEmbeddedForm = this.options.isEmbeddedForm;
 				}
 				
+				this.columnViews = [];
+				
 				this.scaffold.debugLog('initializing model edit');
 				_.bindAll(this, "saveSuccess");
 				this.render();
@@ -557,85 +567,29 @@
 				var $form = this.$el.children("form");
 				
 				//instantiate all of the column templates
-				var editTemplates = {
-					'text': _.template(this.scaffold.templates.modelEditText),
-					'collectionDropdown': _.template(this.scaffold.templates.modelEditCollectionDropdown),
-					'collectionAssociationMany': _.template(this.scaffold.templates.modelEditCollectionAssociationMany),
-					'hidden': _.template(this.scaffold.templates.modelEditHidden),
-					'none': _.template('')
-				};
-				var cols = this.modelDef.columns;
 				var cols = this.modelDef.columns;
 				for( var colName in cols) {
 					//get the template based upon the display type 
-					var displayType = cols[colName].editDisplayType;
+					var displayView = cols[colName].editDisplayView;
 					
 					//default to the text display type
-					if (editTemplates[displayType] == undefined && displayType != 'collectionEmbeddedForm') {
-						displayType = 'text';
+					if (displayView == undefined) {
+						displayView = 'modelEditColumnText';
 					}
 					
-					//make sure to initialize the other collection
-					if (displayType == 'collectionDropdown') {
-						var relatedModelName = cols[colName].relatedModelName;
-						if(this.scaffold.modelDefs[relatedModelName].backboneCollection == undefined) {
-							this.scaffold.initModel(relatedModelName);
-						}
-					}
-					
-					
-					// this will create a whole new embedded form 
-					if( displayType == 'collectionEmbeddedForm' ){
-						
-						//setup some useful handles
-						var columnDef = cols[colName];
-						var relationDef = this.modelDef.relatedModels[columnDef.relatedModelName];
-						var relatedModelDef = this.scaffold.modelDefs[columnDef.relatedModelName];
-						var origEditDisplayType = relatedModelDef.columns[relationDef.relatedJoinColumn].editDisplayType;
-
-						//set the related column in the other model to hidden since we are joining on it
-						relatedModelDef.columns[relationDef.relatedJoinColumn].editDisplayType = 'hidden';
-
-						//create the new div
-						var embeddedDiv = $('<div class="bbs-relatedModelEdit">' + columnDef.label + '</div>');
-						this.$el.append(embeddedDiv);
-						
-						//search through the collection to see if the related model is already set
-						var whereDef = {};
-						whereDef[relationDef.relatedJoinColumn] = this.model.get(relationDef.joinColumn);
-						var relatedModels = relatedModelDef.backboneCollection.where(whereDef);
-						if(relatedModels.length > 0) {
-							var relatedModel = relatedModels[0];
-						}
-						else {
-							var relatedModel = new relatedModelDef.backboneModel();
-							relatedModel.set(relationDef.relatedJoinColumn, this.model.get(relationDef.joinColumn));
-						}
-						
-						//create the new embedded form and push on to the array of embedded forms
-						this.embeddedForms.push(new this.scaffold.views.modelEdit({
-							el: embeddedDiv,
-							scaffold: this.scaffold,
-							modelName: columnDef.relatedModelName,
-							modelDef: relatedModelDef,
-							model: relatedModel,
-							isEmbeddedForm: true
-						}));
-
-						//set the model back to its original
-						relatedModelDef.columns[relationDef.relatedJoinColumn].editDisplayType = origEditDisplayType;
-					}
-					
-					//run the template and append to the tr element
-					if (displayType != 'collectionEmbeddedForm') {
-					$form.append(editTemplates[displayType]({
-						label: cols[colName].label,
-						value: this.model.get(colName),
+					var $columnDiv = $('<div class="bbs-columnEdit"></div>');
+					$form.append($columnDiv);
+					console.log(displayView);
+					var columnView = new this.scaffold.views[displayView]({
+						el: $columnDiv,
+						scaffold: this.scaffold,
+						modelName: this.modelName,
 						columnName: colName,
-						colDef: cols[colName],
-						scaffold: this.scaffold
-					}));
-					}
+						model: this.model,
+					});
+					
+					columnView.render();
+					this.columnViews.push(columnView);
 				}
 				
 				if(this.isEmbeddedForm == false) {
@@ -658,10 +612,12 @@
 			},
 			saveSuccess: function(model, response) {
 				this.collection.add(model);
+				console.log('added to collection' + this.modelName);	
 				//save the embedded forms
-				for(var key in this.embeddedForms) { 
-					this.embeddedForms[key].$el.find("[name='item_id']").val(model.get('id'));
-					this.embeddedForms[key].save();
+				for(var i in this.columnViews) {
+					if (this.columnViews[i].saveEmbeddedForms != undefined) {
+						this.columnViews[i].saveEmbeddedForms(model);
+					}
 				}
 				this.$el.hide();
 				this.undelegateEvents();
@@ -674,11 +630,155 @@
 				this.scaffold.router.navigate(this.modelName, {trigger: true});
 			}
 		}),
+		modelEditColumnText: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.columnName = this.options.columnName;
+				this.model = this.options.model;
+				
+				this.modelDef = this.scaffold.modelDefs[this.modelName];
+				this.columnDef = this.modelDef.columns[this.columnName];
+				this.template = _.template(this.scaffold.templates[this.columnDef.editDisplayTemplate]);
+			},
+			render: function() {
+				this.$el.html(this.template({
+					label: this.columnDef.label,
+					columnName: this.columnName,
+					value: this.model.get(this.columnName)
+				}));
+			}
+		}),
+		modelEditColumnCollectionDropdown: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.columnName = this.options.columnName;
+				this.model = this.options.model;
+				
+				this.modelDef = this.scaffold.modelDefs[this.modelName];
+				this.columnDef = this.modelDef.columns[this.columnName];
+				this.relatedModelName = this.columnDef.relatedModelName;
+				this.relatedModelDef = this.scaffold.modelDefs[this.relatedModelName];
+				this.relatedCollection = this.relatedModelDef.backboneCollection;
+				this.relatedModelToString = this.relatedModelDef.modelToString;
+				this.template = _.template(this.scaffold.templates['modelEditColumnDropdown']);
+			},
+			render: function() {
+				var options = [];
+				this.relatedCollection.each(function(relatedModel) {
+					options[relatedModel.get('id')] = this.relatedModelToString(relatedModel, this.relatedModelDef, this.scaffold);
+				}, this);
+				this.$el.html(this.template({
+					label: this.columnDef.label,
+					columnName: this.columnName,
+					value: this.model.get(this.columnName),
+					options: options,
+					emptyOption: this.columnDef.emptyOption
+				}));
+			}
+		}),
+		modelEditColumnHidden: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.columnName = this.options.columnName;
+				this.model = this.options.model;
+				
+				this.modelDef = this.scaffold.modelDefs[this.modelName];
+				this.columnDef = this.modelDef.columns[this.columnName];
+				this.template = _.template(this.scaffold.templates['modelEditColumnHidden']);
+			},
+			render: function() {
+				this.$el.html(this.template({
+					label: this.columnDef.label,
+					columnName: this.columnName,
+					value: this.model.get(this.columnName)
+				}));
+			}
+		}),
+		modelEditHasManyDeleteInsert: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.columnName = this.options.columnName;
+				this.model = this.options.model;
+				
+				this.modelDef = this.scaffold.modelDefs[this.modelName];
+				this.columnDef = this.modelDef.columns[this.columnName];
+				this.relationDef = this.modelDef.relatedModels[this.columnDef.relatedModelKey];
+				this.relatedModelName = this.relationDef.relatedModelName;
+				this.relatedModelDef = this.scaffold.modelDefs[this.relatedModelName];
+				
+				this.embeddedForms = [];
+			},
+			events: {
+				'click a.bbs-addRelated' : 'addRelated'
+			},
+			render: function() {
+				//create a blank list
+				this.$el.css('border', '1px solid black');
+				this.$el.html('<label>' + this.columnDef.label + '</label>');
+				this.$ul = $('<ul></ul>');
+				this.$el.append(this.$ul);
+				
+				//get the query for the related columns
+				var whereDef = {};
+				whereDef[this.relationDef.relatedJoinColumn] = this.model.get(this.relationDef.joinColumn);
+				var relatedModels = this.relatedModelDef.backboneCollection.where(whereDef);
+				
+				//loop through each related model and add a list item to the view
+				for (var i in relatedModels) {
+					var modelToStringView = new this.scaffold.views.modelToStringWithDelete({
+						tagName: 'li',
+						scaffold: this.scaffold,
+						modelName: this.relatedModelName,
+						model: relatedModels[i]
+					});
+					this.$ul.append(modelToStringView.render().$el);
+				}
+				var template = _.template(this.scaffold.templates.modelEditAddRelated);
+				this.$el.append(template({type:  this.columnDef.label }));
+				return this;
+			},
+			addRelated: function(ev) {
+				console.log(ev.currentTarget);
+				var newModel = new this.relatedModelDef.backboneModel();
+				newModel.set(this.relationDef.relatedJoinColumn, this.model.get(this.relationDef.joinColumn));
+				
+				//hide the related item but save original display form to restore after initializing the view
+				var origEditDisplayView = this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayView;
+				this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayView = 'modelEditColumnHidden';
+				
+				//set the related column in the other model to hidden since we are joining on it
+				this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayType = 'hidden';
+				var view = new this.scaffold.views.modelEdit({
+					model: newModel,
+					modelDef: this.relatedModelDef,
+					modelName: this.relatedModelName,
+					scaffold: this.scaffold,
+					isEmbeddedForm: true
+				})
+				this.$ul.append(view.render().$el);
+
+				this.embeddedForms.push(view);
+				
+				//turn back the join column to the original from the hidden
+				this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayView = origEditDisplayView;
+			},
+			saveEmbeddedForms: function(parentModel) {
+				for (var i in this.embeddedForms) {
+					//find the related id
+					var childForm = this.embeddedForms[i].$el;
+					//set the value for the related model
+					childForm.find('[name="' + this.relationDef.relatedJoinColumn + '"]').val(parentModel.get(this.relationDef.joinColumn));
+					this.embeddedForms[i].save();
+				}
+			}
+		}),
 		//------------------------------------------------//
 		//------------Model table column Views------------//
 		//------------------------------------------------//
-		
-		//view to display a particular model column value
 		modelColumnValue:  Backbone.View.extend({
 			initialize: function() {
 				//set up local variable from those passed in on creation of new object
@@ -689,13 +789,12 @@
 				this.model.on('change', this.render, this);
 			},
 			render: function() {
-				var template = _.template(this.scaffold.templates.modelColumnValue);
-				this.$el.html(template({value: this.model.get(this.columnName)}));
+				//create a blank list
+				this.$el.html(this.model.get(this.columnName));
+				
 				return this;
 			}
 		}),
-		
-		
 		//view to display a particular model column value
 		modelColumnCollectionHasMany:  Backbone.View.extend({
 			initialize: function() {
@@ -755,6 +854,30 @@
 				return this;
 			}
 		}),
+		//this view simply return the modelToString value with a delete button to delete it
+		modelToStringWithDelete: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.model = this.options.model;
+				
+				this.model.on('change', this.render, this);
+				this.model.on('destroy', this.remove, this); 
+			},
+			events: {
+				'click a.bbs-delete' : 'delete'
+			},
+			render: function () {
+				var toStringValue = this.scaffold.modelDefs[this.modelName].modelToString(this.model, this.modelName, this.scaffold);
+				var template = _.template(this.scaffold.templates.modelEditRemoveRelated);
+				this.$el.html(toStringValue + ' ' + template({relatedModelName: this.scaffold.modelDefs[this.modelName].label}));
+				return this;
+			},
+			delete: function() {
+				this.scaffold.debugLog('deleting ' + this.modelName);
+				this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
+			}
+		}),
 		modelColumnLookup: Backbone.View.extend({
 			initialize: function() {
 				this.scaffold = this.options.scaffold;
@@ -775,12 +898,14 @@
 			render: function() {
 				this.$el.html('');
 				if(this.columnValue) {
-					var relatedModelToString = 
-					this.$el.append(this.relatedModelDef.modelToString(
-							this.relatedModel,
-							this.relatedModelDef,
-							this.scafold
-					));
+					if(this.relatedModel != undefined) {
+						var relatedModelToString = 
+						this.$el.append(this.relatedModelDef.modelToString(
+								this.relatedModel,
+								this.relatedModelDef,
+								this.scafold
+						));
+					}
 				}
 				return this;
 			},
@@ -789,7 +914,10 @@
 				//if the related column is set then get the related model
 				if(this.columnValue) {
 					this.relatedModel = this.relatedCollection.get(this.columnValue);
-					this.relatedModel.on('change', this.render, this);
+					if(this.relatedModel != undefined) {
+						this.relatedModel.on('change', this.render, this);
+					}
+					
 				}
 				this.render();
 			}
@@ -816,12 +944,6 @@
 				this.linkedModelDef = this.scaffold.modelDefs[this.linkedRelationDef.relatedModelName];
 				this.linkedCollection = this.linkedModelDef.backboneCollection;
 				
-				//setup listeners
-//				this.relatedCollection.on('change', this.render, this);
-//				this.relatedCollection.on('add', this.render, this);
-//				this.relatedCollection.on('remove', this.render, this);
-//				
-//				this.linkedCollection.on('change', this.render, this);
 			},
 			render: function() {
 				var $ul = $('<ul></ul>');
