@@ -1,5 +1,8 @@
 @CHARSET "UTF-8";
 
+#content {
+	clear:both;
+}
 .dataList .editMode {
     display: none; /* Hides Editing Elements */
 }
