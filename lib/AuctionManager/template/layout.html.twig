@@ -7,27 +7,48 @@
         
         {% block headStyles %}
             <link rel="stylesheet" href="css/AuctionManager.css" />
+            <link rel="stylesheet" href="bootstrap/css/bootstrap.css" />
         {% endblock %}
         
         {% block headCustom %}{% endblock %}
         
     </head>
     <body>
-        <nav id="heaver_nav">
+        <div class="container">
         {% block header %}
-            <ul>
-                <li><a href="{{ webRoot }}">DB Home</a></li>
-                <li><a href="{{ webRoot }}category">Category</a></li>
-                <li><a href="{{ webRoot }}item">Items</a></li>
-                <li><a href="{{ webRoot }}contact">Contacts</a></li>
-            </ul>
+            <div class="navbar">
+                <a class="navbar-brand" href="/" style="width: 300px; max-width: 300px">
+                    <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
+                </a>
+                <ul class="nav navbar-nav">
+                    <li><a href="{{ webRoot }}">DB Home</a></li>
+                    <li><a href="entry#contact">Contacts</a></li>
+                    <li><a href="entry#item">Items</a></li>
+                    <li><a href="entry#category">Categories</a></li>
+                    <li><a href="entry#affiliation">Affiliations</a></li>
+                </ul>
+            </div>
         {% endblock %}
-        </nav>
-        <h1>{{ pageTitle }}</h1>
         <div id="content">{% block content %}
-        <h1>Welcome to Auction Manager</h1>
-{% endblock %}</div>
-        
+            <h1>MCC Philly Auction Festival Database Home</h1>
+            
+            <p>Use this site to enter all data related to the MCC Philly auction items and contacts</p>
+            
+            <p>So I am going to be making changes and approvements along the way, and there may be quite a few problems with this site.
+            If you get stuck, the best bet is to reload the page. 
+            If you have any comments or questions or suggestions let Reuben know: (215-514-6031)
+            or  <a href="mailto:jreubenwetherbee@gmail.com">jreubenwetherbee@gmail.com</a></p>
+            
+            <p>Things Coming but not yet done:
+                <ul>
+                    <li>A way to set up Auction Time Blocks and assign Items to particular Blocks and then order them within the blocks</li>
+                    <li>Bidder Registration/Checkout</li>
+                    <li>Order and Filtering data</li>
+                    <li>Some Reports</li>
+                    <li>Ability to Download to Excel (csv) file</li>
+                </ul>
+        {% endblock %}</div>
+        </div>
         {% block mainJS %}
         <script src="js/jquery-1.10.1.min.js"></script>
         <script src="js/underscore-min.js"></script>
