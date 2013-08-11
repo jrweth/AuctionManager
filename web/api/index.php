@@ -47,6 +47,8 @@ $app->get('/:tableName', function ($tableName) use ($db) {
         case 'affiliation': $orderBy = 'name'; break;
         case 'category': $orderBy = 'name'; break;
         case 'item': $orderBy = 'title'; break;
+        case 'auction': $orderBy = 'auction_block_order'; break;
+        case 'auction_block_item': $orderBy = 'item_order'; break;
         default: $orderBy = null;
     }
     echo json_encode(DBHelper::getTableRecords($db, $tableName, $orderBy), JSON_NUMERIC_CHECK);
