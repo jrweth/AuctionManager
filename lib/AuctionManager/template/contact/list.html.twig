@@ -13,6 +13,7 @@
                     <li><a href="#/item">Items</a></li>
                     <li><a href="#/category">Categories</a></li>
                     <li><a href="#/affiliation">Affiliations</a></li>
+                    <li><a href="#/auction_block">Auction Blocks</a></li>
                 </ul>
             </div>
 {% endblock %}
@@ -153,6 +154,14 @@
                         editDisplayView: 'modelEditHasManyDeleteInsert',
                         relatedModelKey: 'item_contact',
                         linkedModelKey: 'contact'
+                    },
+                    auction_blocks: {
+                        label: 'auction block(s)',
+                        listDisplayView: 'modelColumnManyToManyModelToString',
+                        listManyToManyModelName: 'auction_block',
+                        editDisplayView: 'modelEditHasManyDeleteInsert',
+                        relatedModelKey: 'auction_block_item',
+                        linkedModelKey: 'auction_block'
                     }
                 },
                 relatedModels: {
@@ -165,6 +174,45 @@
                         joinColumn: 'category_id',
                         relatedJoinColumn: 'id',
                         relatedModelName: 'category'
+                    },
+                    auction_block_item: {
+                        joinColumn: 'id',
+                        relatedJoinColumn: 'item_id',
+                        relatedModelName: 'auction_block_item'
+                    }
+                }
+            },
+            auction_block: {
+                label: 'Auction Blocks',
+                columns: {
+                    name: {},
+                    auction_id: {
+                        listDisplayView: 'none',
+                        editDisplayView: 'modelEditColumnHidden',
+                        defaultValue: '{{ auctionId }}'
+                    },
+                    start_time: {},
+                    end_time: {},
+                    name: {},
+                    auction_block_order: {},
+                    block_items: {
+                        label: 'items',
+                        listDisplayView: 'modelColumnManyToManyModelToString',
+                        listManyToManyModelName: 'item',
+                        editDisplayView: 'modelEditHasManyDeleteInsertOrder',
+                        relatedModelKey: 'auction_block_item',
+                        linkedModelKey: 'item'
+                    }
+                },
+                comparator: 'auction_block_order',
+                modelToString: function(model, modelDef, scaffold) {
+                    return model.get('name');
+                },
+                relatedModels: {
+                    auction_block_item: {
+                        joinColumn: 'id',
+                        relatedJoinColumn: 'auction_block_id',
+                        relatedModelName: 'auction_block_item'
                     }
                 }
             },
@@ -200,6 +248,51 @@
                         joinColumn: 'contact_id',
                         relatedJoinColumn: 'id',
                         relatedModelName: 'contact'
+                    },
+                    item: {
+                        joinColumn: 'item_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'item'
+                    }
+                }
+            },
+            auction_block_item: {
+                label: 'Auction Block Items',
+                showInMenu: false,
+                modelToString: function(model, modelDef, scaffold) {
+                    var blockModelDef = scaffold.modelDefs.auction_block;
+                    var blockModel = blockModelDef.backboneCollection.findWhere({id: model.get('auction_block_id')});
+                    var itemModelDef = scaffold.modelDefs.item;
+                    var itemModel = itemModelDef.backboneCollection.findWhere({id: model.get('item_id')});
+                    return model.get('item_order') + '. ' + blockModelDef.modelToString(blockModel, blockModelDef, scaffold) 
+                        + ' - ' + itemModelDef.modelToString(itemModel, itemModelDef, scaffold);
+                },
+                comparator: 'item_order',
+                columns: {
+                    auction_block_id: {
+                        label: 'auction block',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'auction_block'
+                    },
+                    item_id: {
+                        label: 'item',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'item'
+                    },
+                    item_order: {
+                        defaultValue: 0,
+                        editDisplayView: 'modelEditColumnHidden',
+                    }
+                },
+                relatedModels: {
+                    auction_block: {
+                        joinColumn: 'auction_block_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'auction_block'
                     },
                     item: {
                         joinColumn: 'item_id',
