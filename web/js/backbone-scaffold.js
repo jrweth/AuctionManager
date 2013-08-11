@@ -265,6 +265,7 @@
 		
 		//instantiate the Backbone Collection Class and add to our model
 		this.modelDefs[modelName].backboneCollection = new Collection();
+		this.modelDefs[modelName].backboneCollection.comparator = this.modelDefs[modelName].comparator;
 		
 		var fetchCollectionSuccess = function(scaffold, modelName) {
 			return function(collection) {
@@ -315,7 +316,8 @@
 		},
 		showInMenu: true,
 		collectionInitializationStatus: 'not initialized',
-		displayInitializationStatus: 'not initialized'
+		displayInitializationStatus: 'not initialized',
+		comparator: 'id'
 	};
 	
 	BackboneScaffold.prototype.defaults.columnDef = {
@@ -406,6 +408,7 @@
 			</div>',
 		modelEditRemoveRelated: '<a class="bbs-delete" style="cursor: pointer">remove</a>',
 		modelEditAddRelated: '<a class="bbs-addRelated" style="cursor: pointer">add</a>',
+		sortableHandle: '<span class="handle" data-bbs-modelId="<%= modelId %>">:::</span>',
 		detail: function (model, columns, options) {},
 		dropDown: function (model, columns, options) {},
 		lookup: function(model, columns, options) {}
@@ -776,6 +779,104 @@
 				}
 			}
 		}),
+		modelEditHasManyDeleteInsertOrder: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.columnName = this.options.columnName;
+				this.model = this.options.model;
+				
+				this.modelDef = this.scaffold.modelDefs[this.modelName];
+				this.columnDef = this.modelDef.columns[this.columnName];
+				this.relationDef = this.modelDef.relatedModels[this.columnDef.relatedModelKey];
+				this.relatedModelName = this.relationDef.relatedModelName;
+				this.relatedModelDef = this.scaffold.modelDefs[this.relatedModelName];
+				
+				this.embeddedForms = [];
+				_.bindAll(this, "updateOrder");
+			},
+			events: {
+				'click a.bbs-addRelated' : 'addRelated'
+			},
+			render: function() {
+				//create a blank list
+				this.$el.css('border', '1px solid black');
+				this.$el.html('<label>' + this.columnDef.label + '</label>');
+				this.$el.append('<br />click and drag the <span class="handle">:::</span> to order the list');
+				this.$ul = $('<ul class="sortable"></ul>');
+				this.$el.append(this.$ul);
+				
+				//get the query for the related columns
+				var whereDef = {};
+				whereDef[this.relationDef.relatedJoinColumn] = this.model.get(this.relationDef.joinColumn);
+				var relatedModels = this.relatedModelDef.backboneCollection.where(whereDef);
+				
+				//loop through each related model and add a list item to the view
+				for (var i in relatedModels) {
+					var modelToStringView = new this.scaffold.views.modelToStringWithDeleteOrder({
+						tagName: 'li',
+						scaffold: this.scaffold,
+						modelName: this.relatedModelName,
+						model: relatedModels[i]
+					});
+					this.$ul.append(modelToStringView.render().$el);
+				}
+				
+				this.$ul.sortable();
+				var orderCallback = this.updateOrder;
+				this.$ul.sortable().bind('sortupdate', this.updateOrder);
+				var template = _.template(this.scaffold.templates.modelEditAddRelated);
+				this.$el.append(template({type:  this.columnDef.label }));
+				return this;
+			},
+			updateOrder: function() {
+				var orderView = this;
+				this.$ul.find("li").each(function(){
+					
+					//get the id of related model from the attribute
+					var relatedId = $(this).find('span').attr('data-bbs-modelId');
+					console.log(relatedId);
+					console.log(orderView.relatedModelDef.backboneCollection);
+					var relatedModel = orderView.relatedModelDef.backboneCollection.get(relatedId);
+					
+					relatedModel.save({item_order: $(this).index()+1});
+				});
+			},
+			addRelated: function(ev) {
+				console.log(ev.currentTarget);
+				var newModel = new this.relatedModelDef.backboneModel();
+				newModel.set(this.relationDef.relatedJoinColumn, this.model.get(this.relationDef.joinColumn));
+				
+				//hide the related item but save original display form to restore after initializing the view
+				var origEditDisplayView = this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayView;
+				this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayView = 'modelEditColumnHidden';
+				
+				//set the related column in the other model to hidden since we are joining on it
+				this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayType = 'hidden';
+				var view = new this.scaffold.views.modelEdit({
+					model: newModel,
+					modelDef: this.relatedModelDef,
+					modelName: this.relatedModelName,
+					scaffold: this.scaffold,
+					isEmbeddedForm: true
+				})
+				this.$ul.append(view.render().$el);
+
+				this.embeddedForms.push(view);
+				
+				//turn back the join column to the original from the hidden
+				this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayView = origEditDisplayView;
+			},
+			saveEmbeddedForms: function(parentModel) {
+				for (var i in this.embeddedForms) {
+					//find the related id
+					var childForm = this.embeddedForms[i].$el;
+					//set the value for the related model
+					childForm.find('[name="' + this.relationDef.relatedJoinColumn + '"]').val(parentModel.get(this.relationDef.joinColumn));
+					this.embeddedForms[i].save();
+				}
+			}
+		}),
 		//------------------------------------------------//
 		//------------Model table column Views------------//
 		//------------------------------------------------//
@@ -871,6 +972,35 @@
 				var toStringValue = this.scaffold.modelDefs[this.modelName].modelToString(this.model, this.modelName, this.scaffold);
 				var template = _.template(this.scaffold.templates.modelEditRemoveRelated);
 				this.$el.html(toStringValue + ' ' + template({relatedModelName: this.scaffold.modelDefs[this.modelName].label}));
+				return this;
+			},
+			delete: function() {
+				this.scaffold.debugLog('deleting ' + this.modelName);
+				this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
+			}
+		}),
+		//this view simply return the modelToString value with a delete button to delete it
+		modelToStringWithDeleteOrder: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.model = this.options.model;
+				
+				this.model.on('change', this.render, this);
+				this.model.on('destroy', this.remove, this); 
+			},
+			events: {
+				'click a.bbs-delete' : 'delete'
+			},
+			render: function () {
+				var handleTemplate = _.template(this.scaffold.templates.sortableHandle);
+				var toStringValue = this.scaffold.modelDefs[this.modelName].modelToString(this.model, this.modelName, this.scaffold);
+				var template = _.template(this.scaffold.templates.modelEditRemoveRelated);
+				this.$el.html(
+						handleTemplate({modelId: this.model.get('id')})
+						+ toStringValue + ' '
+						+ template({relatedModelName: this.scaffold.modelDefs[this.modelName].label})
+				);
 				return this;
 			},
 			delete: function() {
