@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         {% block head %}
             <title>Auction Manager {% block title %}{{ pageTitle }}{% endblock %}</title>
@@ -8,6 +8,8 @@
         {% block headStyles %}
             <link rel="stylesheet" href="css/AuctionManager.css" />
             <link rel="stylesheet" href="bootstrap/css/bootstrap.css" />
+            <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.css" />
+            <link rel="stylesheet" href="DataTables/css/DT_bootstrap.css" />
         {% endblock %}
         
         {% block headCustom %}{% endblock %}
@@ -17,17 +19,24 @@
         <div class="container">
         {% block header %}
             <div class="navbar">
-                <a class="navbar-brand" href="/" style="width: 300px; max-width: 300px">
-                    <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
-                </a>
-                <ul class="nav navbar-nav">
-                    <li><a href="{{ webRoot }}">DB Home</a></li>
-                    <li><a href="entry#contact">Contacts</a></li>
-                    <li><a href="entry#item">Items</a></li>
-                    <li><a href="entry#category">Categories</a></li>
-                    <li><a href="entry#affiliation">Affiliations</a></li>
-                    <li><a href="entry#auction_block">Auction Blocks</a></li>
-                </ul>
+                <div class="navbar-inner">
+                            <a class="brand" href="/" >
+                                <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
+                            </a>
+                    <ul class="nav navbar-nav">
+                        <li><a href="{{ webRoot }}">DB Home</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="entry#contact">Contacts</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="entry#item">Items</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="entry#category">Categories</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="entry#affiliation">Affiliations</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="entry#auction_block">Auction Blocks</a></li>
+                    </ul>
+                </div>
             </div>
         {% endblock %}
         <div id="content">{% block content %}
@@ -57,6 +66,9 @@
         <script src="js/backbone-relational.js"></script>
         <script src="js/backbone-scaffold.js"></script>
         <script src="js/jquery.sortable.js"></script>
+        <script src="DataTables/js/jquery.dataTables.js"></script>
+        <script src="TableTools/js/ZeroClipboard.js"></script>
+        <script src="TableTools/js/TableTools.min.js"></script>
         {% endblock %}
         
         {% block customJS %}{% endblock %}
