@@ -4,17 +4,24 @@
 
 {%  block header %}
             <div class="navbar">
-                <a class="navbar-brand" href="/" style="width: 300px; max-width: 300px">
-                    <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
-                </a>
-                <ul class="nav navbar-nav">
-                    <li><a href="{{ webRoot }}">DB Home</a></li>
-                    <li><a href="#/contact">Contacts</a></li>
-                    <li><a href="#/item">Items</a></li>
-                    <li><a href="#/category">Categories</a></li>
-                    <li><a href="#/affiliation">Affiliations</a></li>
-                    <li><a href="#/auction_block">Auction Blocks</a></li>
-                </ul>
+                <div class="navbar-inner">
+                            <a class="brand" href="/" >
+                                <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
+                            </a>
+                    <ul class="nav navbar-nav">
+                        <li><a href="{{ webRoot }}">DB Home</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="#/contact">Contacts</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="#/item">Items</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="#/category">Categories</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="#/affiliation">Affiliations</a></li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="#/auction_block">Auction Blocks</a></li>
+                    </ul>
+                </div>
             </div>
 {% endblock %}
 {% block customJS %}
@@ -37,7 +44,7 @@
             <h1 class="bbs-modelHeader"><%- label %></h1> \
             <div class="bbs-modelSubSections"> \
                <div class="bbs-modelList bbs-modelSubSection"> \
-                  <div class="bbs-modelAddNew"> \
+                  <div class="bbs-modelAddNew" style="margin-bottom: 10px"> \
                      <button class="bbs-addNew btn btn-primary">add new</button> \
                   </div> \
                </div> \
@@ -53,7 +60,9 @@
          modelEditActions: '<div class="bbs-editActions" style="margin-top: 20px"> \
             <button class="bbs-save btn btn-primary">save</button> \
             <button class="bbs-cancel btn">cancel</button> \
-         </div>'
+         </div>',
+         modelEditRemoveRelated: '<a class="bbs-delete btn btn-mini" style="cursor: pointer">remove</a>',
+         modelEditAddRelated: '<a class="bbs-addRelated btn btn-mini" style="cursor: pointer">add</a>'
         },
         modelDefs: {
             contact: {
@@ -345,7 +354,45 @@
             }
         }
     };
+    $.extend( true, $.fn.DataTable.TableTools.classes, {
+        "container": "btn-group",
+        "buttons": {
+            "normal": "btn",
+            "disabled": "btn disabled"
+        }
+    });
     $.bbscaffold = new BackboneScaffold(init);
+    $.bbscaffold.views.modelView = BackboneScaffold.prototype.defaults.views.modelView.extend({
+        addAll: function() {
+            //initiate the data table
+            
+            $table = this.$el.find('.bbs-modelListTable');
+            $table.dataTable().fnDestroy();
+            
+            this.scaffold.debugLog('Adding All rows for model ' + this.modelName);
+            this.$el.find('.bbs-modelListTable tbody').html(''); // clean the list
+            this.collection.each(this.addOne, this);
+
+            $table.dataTable({
+                "sDom": "<'row'<'span6'fil><'span6'rT>><'row'<'span12't>>",
+                "bScrollCollapse": true,
+                "bPaginate": false,
+                "bStateSave": false,
+                "oTableTools": {
+                    "sSwfPath": "TableTools/swf/copy_csv_xls_pdf.swf",
+                    "aButtons": ["copy", "csv", "pdf"]
+                },
+                "aaSorting": [[ 2, "desc" ]],
+                "aoColumnDefs": [
+                {
+                    bSortable: false,
+                    aTargets: [ 0, 1 ]
+                 }
+               ]
+            });
+        },
+    });
+    
     
     $.bbscaffold.setupScaffold('#content');
 </script>
