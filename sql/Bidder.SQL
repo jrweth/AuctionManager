@@ -14,7 +14,9 @@ CREATE TABLE Bidder
 	contact_id INTEGER NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (auction_id) REFERENCES Auction (id) ON DELETE CASCADE,
-	FOREIGN KEY (contact_id) REFERENCES Contact (id) ON DELETE CASCADE
+	FOREIGN KEY (contact_id) REFERENCES Contact (id) ON DELETE CASCADE,
+    UNIQUE (bidder_number, auction_id),
+    UNIQUE (contact_id, auction_id)
 ) 
 ;
 
