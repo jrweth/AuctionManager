@@ -264,8 +264,7 @@
 		});
 		
 		//instantiate the Backbone Collection Class and add to our model
-		this.modelDefs[modelName].backboneCollection = new Collection();
-		this.modelDefs[modelName].backboneCollection.comparator = this.modelDefs[modelName].comparator;
+		this.modelDefs[modelName].backboneCollection = new Collection([], {comparator: this.modelDefs[modelName].comparator});
 		
 		var fetchCollectionSuccess = function(scaffold, modelName) {
 			return function(collection) {
@@ -387,10 +386,10 @@
 				<% if(emptyOption != undefined) { %> \
 					<option value=""><%- emptyOption %></option> \
 				<% } %> \
-				<% for( var optionValue in options) { %> \
-					<option value="<%- optionValue %>" \
-					<% if(optionValue == value) { %> selected="selected" <% } %> \
-					><%- options[optionValue] %></option> \
+				<% for( var i in options) { %> \
+					<option value="<%- options[i].value %>" \
+					<% if(options[i] == value) { %> selected="selected" <% } %> \
+					><%- options[i].display %></option> \
 				<% } %> \
 			</select></div>',
 		modelEditCollectionAssociationMany: '<div class="bbs-editColumn"> \
@@ -452,7 +451,7 @@
 			},
 			addNew: function() {
 				this.scaffold.debugLog('Add New: ' + this.modelName);
-				this.scaffold.router.navigate(this.modelName + '/insert', {trigger: true});
+				this.scaffold.router.navigate('model/' + this.modelName + '/insert', {trigger: true});
 			},
 			addOne: function(model) {
 				var view = new this.scaffold.views.modelTableRow({
@@ -525,7 +524,7 @@
 				return this;
 			},
 			edit: function () {
-				this.scaffold.router.navigate(this.modelName + '/edit/' + this.model.get('id'), {trigger: true});
+				this.scaffold.router.navigate('model/' + this.modelName + '/edit/' + this.model.get('id'), {trigger: true});
 			},
 			delete: function() {
 				if(confirm('Are you sure you want to delete this record?')) {
@@ -580,19 +579,21 @@
 						displayView = 'modelEditColumnText';
 					}
 					
-					var $columnDiv = $('<div class="bbs-columnEdit"></div>');
-					$form.append($columnDiv);
-					console.log(displayView);
-					var columnView = new this.scaffold.views[displayView]({
-						el: $columnDiv,
-						scaffold: this.scaffold,
-						modelName: this.modelName,
-						columnName: colName,
-						model: this.model,
-					});
-					
-					columnView.render();
-					this.columnViews.push(columnView);
+					if (displayView != 'none') {
+						var $columnDiv = $('<div class="bbs-columnEdit"></div>');
+						$form.append($columnDiv);
+						console.log(displayView);
+						var columnView = new this.scaffold.views[displayView]({
+							el: $columnDiv,
+							scaffold: this.scaffold,
+							modelName: this.modelName,
+							columnName: colName,
+							model: this.model,
+						});
+						
+						columnView.render();
+						this.columnViews.push(columnView);
+					}
 				}
 				
 				if(this.isEmbeddedForm == false) {
@@ -625,12 +626,12 @@
 				this.$el.hide();
 				this.undelegateEvents();
 				if(this.isEmbeddedForm == false) {
-					this.scaffold.router.navigate(this.modelName, {trigger: true});
+					this.scaffold.router.navigate('model/' + this.modelName, {trigger: true});
 				}
 			},
 			cancel: function() {
 				this.undelegateEvents();
-				this.scaffold.router.navigate(this.modelName, {trigger: true});
+				this.scaffold.router.navigate('model/' + this.modelName, {trigger: true});
 			}
 		}),
 		modelEditColumnText: Backbone.View.extend({
@@ -669,9 +670,13 @@
 			},
 			render: function() {
 				var options = [];
-				this.relatedCollection.each(function(relatedModel) {
-					options[relatedModel.get('id')] = this.relatedModelToString(relatedModel, this.relatedModelDef, this.scaffold);
-				}, this);
+				for (var i = 0; i < this.relatedCollection.length; i++) {
+					var relatedModel = this.relatedCollection.at(i);
+					options[i] = {
+						value: relatedModel.get('id'),
+						display: this.relatedModelToString(relatedModel, this.relatedModelDef, this.scaffold)
+					};
+				}
 				this.$el.html(this.template({
 					label: this.columnDef.label,
 					columnName: this.columnName,
@@ -1154,9 +1159,9 @@
 	BackboneScaffold.prototype.defaults.router = Backbone.Router.extend({
 		routes: {
 			'' : 'viewDefault',
-			':modelName': 'viewModel',
-			':modelName/insert': 'insertModel',
-			':modelName/edit/:id': 'editModel'
+			'model/:modelName': 'viewModel',
+			'model/:modelName/insert': 'insertModel',
+			'model/:modelName/edit/:id': 'editModel'
 		},
 		//the default view
 		viewDefault: function() {
