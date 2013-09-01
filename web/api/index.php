@@ -65,6 +65,19 @@ $app->get('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
 
 $app->post('/:tableName', function ($tableName) use ($db, $app) {
     $values = json_decode($app->request()->getBody(), true);
+    
+    if ($tableName == 'bidder' && !array_key_exists('bidder_number', $values)) {
+        $sql = 'select max(bidder_number) as max_bidder from bidder where auction_id = ' . intval($values['auction_id']);
+        $sth = $db->query($sql);
+        $records = $sth->fetchAll(\PDO::FETCH_CLASS);
+        if(array_key_exists(0, $records)) {
+            $values['bidder_number'] = $records[0]->max_bidder + 1;
+        }
+        else {
+            $values['bidder_number'] = 1;
+        }
+    }
+    
     if($id = DBHelper::insertTableRecord($db, $tableName, $values)) {
         $values['id'] = $id;
         echo json_encode($values, JSON_NUMERIC_CHECK);
