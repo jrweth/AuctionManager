@@ -1,0 +1,264 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<style>
+    .bbs-modelHeader { display: none}
+    td ul {list-style-type: none}
+</style>
+<div style="margin-bottom: 20px">
+    <a class="btn" onclick="
+        $('#step2, #step3').removeClass('active');
+        $('#step1').addClass('active');
+        $.bbscaffold.router.navigate('model/contact', {trigger: true});
+        $('#scaffold-content').show();
+        $('#bidder-number-report').hide();
+   ">start over/register new</a>
+</div>
+<ul class="nav nav-tabs">
+  <li id="step1" class="active"><a data-toggle="tab">Step 1 - Find Contact</a></li>
+  <li id="step2"><a data-toggle="tab">Step 2 - Confirm/Enter Contact Data</a></li>
+  <li id="step3"><a data-toggle="tab">Step 3 - Generate Bidder Number</a></li>
+</ul>
+<div id="scaffold-content">
+</div>
+
+<div id="bidder-number-report">
+<h1 id="bidder-name"></span>
+<h1 id="bidder-number"></span>
+</div>
+
+{% endblock %}
+
+{% block customJS %}
+<script type="text/javascript">
+var init = {
+        options: {
+            debug: true,
+            apiRoot: '{{ webRoot}}api/',
+            modelInitOrder: ['category', 'contact', 'item', 'item_contact']
+        },
+        templates: {
+          scaffold: '<div class="bbs-scaffold"> \
+                  <ul class="bbs-modelMenu nav navbar-nav" style="display: none"></ul></div> \
+              <div class="bbs-models" style="clear:both"    ></div> \
+           </div>',
+          modelListTableActions: '<td><button class="bbs-edit btn">select</button></td> \
+           </td>',
+         model: '<div class="bbs-model bbs-model-<%- name %>" style="display: none"> \
+            <h1 class="bbs-modelHeader"><%- label %></h1> \
+            <div class="bbs-modelSubSections"> \
+               <div class="bbs-modelList bbs-modelSubSection"> \
+                  <div class="bbs-modelAddNew" style="margin-bottom: 10px"> \
+                     If After Searching You cannot find the contact then <button class="bbs-addNew btn btn-primary">add new contact</button> \
+                  </div> \
+               </div> \
+               <div class="bbs-modelEdit bbs-modelSubSection"></div> \
+               <div class="bbs-modelDetail bbs-modelSubSection"></div> \
+            </div> \
+         </div>',
+         modelListTable: '<table class="bbs-modelListTable table table-striped"><thead><th width="50px">&#160</th> \
+            <% for(columnName in columns) { if (columns[columnName].listDisplayView != "none") { %> \
+            <th><%- columns[columnName].label %></th> \
+         <% }} %> \
+         </thead><tbody></tbody></table>',
+         modelEditActions: '<div class="bbs-editActions" style="margin-top: 20px"> \
+            <button class="bbs-confirm btn btn-primary">save and generated bidder number</button> \
+         </div>',
+         modelEditRemoveRelated: '<a class="bbs-delete btn btn-mini" style="cursor: pointer">remove</a>',
+         modelEditAddRelated: '<a class="bbs-addRelated btn btn-mini" style="cursor: pointer">add</a>'
+        },
+        modelDefs: {
+            contact: {
+                label: 'Contacts',
+                columns: {
+                    bidder_number: {
+                        label: 'bidder number',
+                        listDisplayView: 'modelColumnHasManyModelToString',
+                        editDisplayView: 'none',
+                        relatedModelKey: 'bidder'
+                    },
+                    first_name: {},
+                    middle_name: {},
+                    last_name: {},
+                    spouse_name: {},
+                    organization_name: {},
+                    affiliation_id: {
+                        label: 'affiliation',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'affiliation'
+                    },
+                    auction_group_id: {
+                        listDisplayView: 'none',
+                        editDisplayView: 'modelEditColumnHidden',
+                        defaultValue: '{{ auctionGroupId }}'
+                    },
+                    email: {},
+                    phone: {},
+                    street1: {},
+                    street2: {},
+                    city: {},
+                    state: {},
+                    zip: {},
+                    notes: {
+                        editDisplayTemplate: 'modelEditColumnTextArea'
+                    }
+                },
+                modelToString: function(model, modelDef, scaffold) {
+                    return model.get('first_name') + ' ' + model.get('last_name');
+                },
+                relatedModels: {
+                    affiliation: {
+                        joinColumn: 'affiliation_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'affiliation'
+                    },
+                    bidder: {
+                        joinColumn: 'id',
+                        relatedJoinColumn: 'contact_id',
+                        relatedModelName: 'bidder'
+                    }
+                }
+            },
+            affiliation: {
+                label: 'Affiliations',
+                columns: {
+                    name: {},
+                    auction_group_id: {
+                        listDisplayView: 'none',
+                        editDisplayView: 'modelEditColumnHidden',
+                        defaultValue: '{{ auctionGroupId }}'
+                    },
+                    contact_id: {
+                        label: 'affiliation contact',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'contact'
+                    },
+                },
+                modelToString: function(model, modelDef, scaffold) {
+                    return model.get('name');
+                },
+                relatedModels: {
+                    contact: {
+                        joinColumn: 'contact_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'contact'
+                    }
+                }
+            },
+            bidder: {
+                label: 'Bidder',
+                columns: {
+                    bidder_number: {},
+                    auction_id: {
+                        listDisplayView: 'none',
+                        editDisplayView: 'modelEditColumnHidden',
+                        defaultValue: '{{ auctionId }}'
+                    },
+                    contact_id: {
+                        label: 'affiliation',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'contact'
+                    }
+                },
+                modelToString: function(model, modelDef, scaffold) {
+                    return model.get('bidder_number');
+                },
+                relatedModels: {
+                    contact: {
+                        joinColumn: 'contact_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'contact'
+                    }
+                }
+            }
+        }
+    };
+    $.extend( true, $.fn.DataTable.TableTools.classes, {
+        "container": "btn-group",
+        "buttons": {
+            "normal": "btn",
+            "disabled": "btn disabled"
+        }
+    });
+    $.bbscaffold = new BackboneScaffold(init);
+
+    $.bbscaffold.views.modelView = BackboneScaffold.prototype.defaults.views.modelView.extend({
+        addAll: function() {
+            //initiate the data table
+            $table = this.$el.find('.bbs-modelListTable');
+            $table.dataTable().fnDestroy();
+            
+            this.scaffold.debugLog('Adding All rows for model ' + this.modelName);
+            this.$el.find('.bbs-modelListTable tbody').html(''); // clean the list
+            this.collection.each(this.addOne, this);
+
+            $table.dataTable({
+                "sDom": "<'row'<'span6'fil><'span6'r>><'row'<'span12't>>",
+                "bScrollCollapse": true,
+                "bPaginate": false,
+                "bStateSave": false,
+                "aaSorting": [[ 4, "asc" ]],
+                "aoColumnDefs": [
+                {
+                    bSortable: false,
+                    aTargets: [ 0]
+                 }
+               ]
+            });
+        },
+		addNew: function() {
+            $('#step1').removeClass('active');
+            $('#step2').addClass('active');
+			this.scaffold.router.navigate('model/' + this.modelName + '/insert', {trigger: true});
+		},
+    });
+
+    $.bbscaffold.views.modelTableRow = BackboneScaffold.prototype.defaults.views.modelTableRow.extend({
+        edit: function () {
+            $('#step1').removeClass('active');
+            $('#step2').addClass('active');
+            this.scaffold.router.navigate('model/' + this.modelName + '/edit/' + this.model.get('id'), {trigger: true});
+        }
+    });
+
+    $.bbscaffold.views.modelEdit = BackboneScaffold.prototype.defaults.views.modelEdit.extend({
+    	events: {
+    		'click .bbs-confirm' : 'confirm',
+    	},
+    	confirm: function () {
+    		this.model.save(this.$el.children('form').serializeObject(), {
+    			wait: true,
+    			error: function(model, error){ alert(error.responseText);},
+    			success: this.saveSuccess
+    		});
+    	},
+    	saveSuccess: function(model, response) {
+    		this.collection.add(model);
+    		console.log('added to collection' + this.modelName);	
+    		//save the embedded forms
+    		var bidderModel = new this.scaffold.modelDefs.bidder.backboneModel();
+    		bidderModel.save({contact_id: model.get('id')}, {
+    	    	wait: true,
+    	    	error: function(model, error) { alert(error.responseText);},
+    	    	success: this.bidderSaveSuccess
+    		});
+    	},
+    	bidderSaveSuccess: function(model, response) {
+            $('#step2').removeClass('active');
+            $('#step3').addClass('active');
+        	$('#scaffold-content').hide();
+        	$('#bidder-number-report').show();
+        	$('#bidder-number').html(model.get('bidder_number'));
+    	    console.log(this.scaffold);
+    	}
+    });
+    $.bbscaffold.setupScaffold('#scaffold-content');
+
+</script>
+{% endblock %}
