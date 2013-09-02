@@ -45,7 +45,7 @@
         modelDefs: {
             contact: {
                 label: 'Contacts',
-                comparator: 'last_name',
+                comparator: 'first_name',
                 columns: {
                     first_name: {},
                     middle_name: {},
@@ -353,7 +353,7 @@
             this.collection.each(this.addOne, this);
 
             $table.dataTable({
-                "sDom": "<'row'<'span6'fil><'span6'rT>><'row'<'span12't>>",
+                "sDom": "<'row'<'span4'<'row'<'span12'f>><'row'<'span12' i l>>><'span6'rT>><'row'<'span12't>>",
                 "bScrollCollapse": true,
                 "bPaginate": false,
                 "bStateSave": false,
