@@ -10,6 +10,8 @@ CREATE TABLE Auction_Group
 (
 	id INTEGER NOT NULL,
 	name VARCHAR(100) NOT NULL,
+	username VARCHAR(100),
+	password VARCHAR(100),
 	PRIMARY KEY (id)
 ) 
 ;

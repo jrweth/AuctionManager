@@ -21,13 +21,36 @@ class AppRouter
     
     //define all of the routes 
     public function route() {
+        $this->app->container = $this->container;
+        $app = $this->app;
         $container = $this->container;
+        $twig = $container['twig'];
+        
+        $authenticate = function ($app) {
+            return function () use ($app) {
+                if (!isset($_SESSION['user'])) {
+                    $_SESSION['urlRedirect'] = $app->request()->getPathInfo();
+                    $app->flash('error', 'Login required');
+                    $app->redirect($app->container['config']['webRoot'].'login');
+                }
+            };
+        };
+        
+        $this->app->hook('slim.before.dispatch', function() use ($app) {
+            $user = null;
+            if (isset($_SESSION['user'])) {
+                $user = $_SESSION['user'];
+                $app->container['twig']->addGlobal('user', $user);
+                $app->container['twig']->addGlobal('auctionId', $_SESSION['auctionId']);
+                $app->container['twig']->addGlobal('auctionGroupId', $_SESSION['auctionGroupId']);
+            }
+        });
         
         $this->app->get('/', function () use($container) {
             echo $container['twig']->render('layout.html.twig');
         });
         
-        $this->app->get('/entry/:model', function() use($container) {
+        $this->app->get('/entry/:model', $authenticate($app), function() use($container) {
             echo $container['twig']->render('entry.html.twig', array('pageTitle' => 'Contact List'));
         });
         
@@ -35,11 +58,10 @@ class AppRouter
         $this->app->get('/register', function() use($container) {
             echo $container['twig']->render('register.html.twig');
         });
-/*        
+       
         $app->get("/logout", function () use ($app) {
            unset($_SESSION['user']);
-           $app->view()->setData('user', null);
-           $app->render('logout.php');
+            $app->redirect($app->container['config']['webRoot']);
         });
         
         $app->get("/login", function () use ($app) {
@@ -51,7 +73,7 @@ class AppRouter
            }
         
            $urlRedirect = '/';
-        
+           
            if ($app->request()->get('r') && $app->request()->get('r') != '/logout' && $app->request()->get('r') != '/login') {
               $_SESSION['urlRedirect'] = $app->request()->get('r');
            }
@@ -60,52 +82,57 @@ class AppRouter
               $urlRedirect = $_SESSION['urlRedirect'];
            }
         
-           $email_value = $email_error = $password_error = '';
+           $username = $login_error = '';
         
-           if (isset($flash['email'])) {
-              $email_value = $flash['email'];
+           if (isset($flash['username'])) {
+              $username = $flash['username'];
            }
-        
-           if (isset($flash['errors']['email'])) {
-              $email_error = $flash['errors']['email'];
-           }
-        
-           if (isset($flash['errors']['password'])) {
-              $password_error = $flash['errors']['password'];
-           }
-        
-           $app->render('login.php', array('error' => $error, 'email_value' => $email_value, 'email_error' => $email_error, 'password_error' => $password_error, 'urlRedirect' => $urlRedirect));
+           
+           echo $app->container['twig']->render('login.html.twig', array(
+               'pageTitle' => 'Login',
+               'error' => $error,
+               'username' => $username,
+               'login_error' => $login_error,
+               'urlRedirect' => $urlRedirect
+           ));
         });
         
         $app->post("/login", function () use ($app) {
-            $email = $app->request()->post('email');
-            $password = $app->request()->post('password');
-        
-            $errors = array();
-        
-            if ($email != "brian@nesbot.com") {
-                $errors['email'] = "Email is not found.";
-            } else if ($password != "aaaa") {
-                $app->flash('email', $email);
-                $errors['password'] = "Password does not match.";
+            $username = $app->request()->post('username');
+            $password = md5($app->request()->post('password'));
+
+            $stmt = $app->container['db']->query('select id, name from auction_group where username = ? and password = ?');
+            $params = array($username, $password);
+            $stmt->execute($params);
+            
+            $records = $stmt->fetchAll(\PDO::FETCH_CLASS);
+            if(array_key_exists(0, $records)) {
+                //set session options
+                $_SESSION['user'] = $username;
+                $_SESSION['auctionGroupId'] = $records[0]->id;
+                
+                //go get the default auction for this auction group
+                $stmt = $app->container['db']->query('select id from auction where auction_group_id = ? and is_default_auction = 1');
+                $stmt->execute(array($_SESSION['auctionGroupId']));
+                $_SESSION['auctionId'] = $stmt->fetchColumn();
             }
-        
-            if (count($errors) > 0) {
-                $app->flash('errors', $errors);
-                $app->redirect('/login');
+            else {
+                $error = "Username/Password invalid";
+                $app->flash('error', $error);
+                $app->redirect($app->container['config']['webRoot'].'login');
             }
-        
-            $_SESSION['user'] = $email;
-        
+            
             if (isset($_SESSION['urlRedirect'])) {
                $tmp = $_SESSION['urlRedirect'];
                unset($_SESSION['urlRedirect']);
-               $app->redirect($tmp);
+               if(preg_match('/entry\/(.*)/', $tmp, $matches)) {
+                   $tmp = $matches[0] . '#model/' . $matches[1];
+               }
+               $app->redirect($app->container['config']['webRoot'].$tmp);
             }
-        
-            $app->redirect('/');
+            
+            $app->redirect($app->container['config']['webRoot']);
         });
-    */
     }
 }
 

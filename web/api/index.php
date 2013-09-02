@@ -22,26 +22,28 @@ Slim\Slim::registerAutoloader();
 
 //set up the slim app and the 
 $app = new Slim\Slim();
+$app->add(new \Slim\Middleware\SessionCookie(array('secret' => 'hereismysecretthing')));
 $app->contentType('application/json');
 
 //set up the db
 $db = new PDO('sqlite:' . $config['projectRoot'].$config['dbPath']);
 $db->exec('PRAGMA foreign_keys = ON');
 
-function outputResult($action, $success = true, $id = 0)
-{
-    echo json_encode(array(
-        'action' => $action,
-        'success' => $success,
-        'id' => intval($id),
-    ), JSON_NUMERIC_CHECK);
-}
 
-$app->get('/', function () use($db) {
+$authenticate = function ($app) {
+    return function () use ($app) {
+        if (!isset($_SESSION['user'])) {
+            $app->halt(500, 'You are not currently logged on.');
+        }
+    };
+};
+
+
+$app->get('/', $authenticate($app), function () use($db) {
     echo '';
 });
 
-$app->get('/:tableName', function ($tableName) use ($db) {
+$app->get('/:tableName', $authenticate($app), function ($tableName) use ($db) {
     switch($tableName) {
         case 'contact': $orderBy = 'first_name, last_name, organization_name'; break;
         case 'affiliation': $orderBy = 'name'; break;
@@ -54,7 +56,7 @@ $app->get('/:tableName', function ($tableName) use ($db) {
     echo json_encode(DBHelper::getTableRecords($db, $tableName, $orderBy), JSON_NUMERIC_CHECK);
 });
 
-$app->get('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
+$app->get('/:tableName/:id', $authenticate($app), function ($tableName, $id) use ($db, $app) {
     if($record = DBHelper::getTableRecord($db, $tableName, $id)) {
         echo json_encode($record, JSON_NUMERIC_CHECK);
     }
@@ -63,7 +65,7 @@ $app->get('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
     }
 });
 
-$app->post('/:tableName', function ($tableName) use ($db, $app) {
+$app->post('/:tableName', $authenticate($app), function ($tableName) use ($db, $app) {
     $values = json_decode($app->request()->getBody(), true);
     
     if ($tableName == 'bidder' && !array_key_exists('bidder_number', $values)) {
@@ -88,7 +90,7 @@ $app->post('/:tableName', function ($tableName) use ($db, $app) {
 });
 
 
-$app->put('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
+$app->put('/:tableName/:id', $authenticate($app), function ($tableName, $id) use ($db, $app) {
     $values = json_decode($app->request()->getBody(), true);
     if(DBHelper::updateTableRecord($db, $tableName, $id, $values)) {
         echo json_encode($values, JSON_NUMERIC_CHECK);
@@ -98,7 +100,7 @@ $app->put('/:tableName/:id', function ($tableName, $id) use ($db, $app) {
     }
 });
 
-$app->delete('/:tableName/:id', function ($tableName, $id) use ($db) {
+$app->delete('/:tableName/:id', $authenticate($app), function ($tableName, $id) use ($db) {
     if(!DBHelper::deleteTableRecord($db, $tableName, $id)) {
         $app->halt(500, 'An Error Occured trying to delete the record.');
     }

@@ -1,0 +1,16 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+{{ error }}
+<form action="{{ webRoot }}login" method="POST">
+  <p>Username: <input type="text" name="username" id="username" value="{{ username }}" /> <span class="error"><?=$email_error?></span></p>
+  <p>Password: <input type="password" name="password" id="password" /> <span class="error"><?=$password_error?></span></p>
+  <p><input type="submit" value="Login" />
+</form>
+
+{% endblock %}
+
+{% block customJS %}
+
+</script>
+{% endblock %}

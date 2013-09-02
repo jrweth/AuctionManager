@@ -40,6 +40,12 @@
                         <li><a href="{{ webRoot }}entry/affiliation#model/affiliation">Affiliations</a></li>
                         <li class="divider-vertical"></li>
                         <li><a href="{{ webRoot }}entry/auction_block#model/auction_block">Auction Blocks</a></li>
+                        <li class="divider-vertical"></li>
+                        {% if user %}
+                            <li><a href="{{ webRoot }}logout">Logout</a></li>
+                        {% else %}
+                            <li><a href="{{ webRoot }}login">Login</a></li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -56,11 +62,12 @@
             
             <p>Things Coming but not yet done:
                 <ul>
-                    <li>A way to set up Auction Time Blocks and assign Items to particular Blocks and then order them within the blocks</li>
-                    <li>Bidder Registration/Checkout</li>
-                    <li>Order and Filtering data</li>
+                    <li>Way better way to set up Auction Time Blocks and assign Items to particular Blocks and then order them within the blocks</li>
+                    <li>Bidder Registration</li>
+                    <li>Checkout</li>
                     <li>Some Reports</li>
-                    <li>Ability to Download to Excel (csv) file</li>
+                    <li>Way to Cancel adding a new related model</li>
+                    <li>Way to distinguish between test and real site</li>
                 </ul>
         {% endblock %}</div>
         </div>
