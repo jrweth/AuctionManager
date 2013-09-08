@@ -16,6 +16,7 @@
     	last_name VARCHAR(50),
     	organization_name VARCHAR(50),
     	affiliation_id INTEGER,
+    	drivers_licesnse VARCHAR(30),
     	email VARCHAR(100),
     	phone VARCHAR(50),
     	street1 VARCHAR(255),
