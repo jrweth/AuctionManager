@@ -45,6 +45,7 @@ class AppRouter
                 $app->container['twig']->addGlobal('auctionGroupId', $_SESSION['auctionGroupId']);
             }
         });
+        $this->app->expires('-1 day');
         
         $this->app->get('/', function () use($container) {
             echo $container['twig']->render('layout.html.twig');
