@@ -432,10 +432,10 @@
 				{
 					var relatedModelName = relatedModels[relatedModelKey].relatedModelName;
 					var relatedCollection = this.scaffold.modelDefs[relatedModelName].backboneCollection;
-					relatedCollection.on('add', this.addAll, this);
-					relatedCollection.on('reset', this.addAll, this);
-					relatedCollection.on('remove', this.relatedModelRemoved, this);
-					relatedCollection.on('change', this.addAll, this);
+					//relatedCollection.on('add', this.addAll, this);
+					//relatedCollection.on('reset', this.addAll, this);
+					//relatedCollection.on('remove', this.relatedModelRemoved, this);
+					//relatedCollection.on('change', this.addAll, this);
 				}
 				
 				//setup the table
