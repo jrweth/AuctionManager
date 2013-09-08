@@ -14,7 +14,7 @@
 	/**
 	 * CommonJS shim
 	 **/
-	var $, _, Backbone;
+	var $, _, Backbone, BackboneScaffold;
 	
 	if ( typeof window === 'undefined' ) {
 		$ = require( 'jquery');
