@@ -25,6 +25,8 @@ $app = new Slim\Slim();
 $app->add(new \Slim\Middleware\SessionCookie(array('secret' => 'hereismysecretthing')));
 $app->contentType('application/json');
 
+$app->expires('-1 day');
+
 //set up the db
 $db = new PDO('sqlite:' . $config['projectRoot'].$config['dbPath']);
 $db->exec('PRAGMA foreign_keys = ON');
