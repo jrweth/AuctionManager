@@ -721,11 +721,12 @@
 				this.embeddedForms = [];
 			},
 			events: {
-				'click a.bbs-addRelated' : 'addRelated'
+				'click a.bbs-addRelated' : 'addRelated',
+				'click a.bbs-cancelAddRelated' : 'cancelAddRelated'
 			},
 			render: function() {
 				//create a blank list
-				this.$el.css('border', '1px solid black');
+				this.$el.css('background-color', '#EEEEEE');
 				this.$el.html('<label>' + this.columnDef.label + '</label>');
 				this.$ul = $('<ul></ul>');
 				this.$el.append(this.$ul);
@@ -750,7 +751,6 @@
 				return this;
 			},
 			addRelated: function(ev) {
-				console.log(ev.currentTarget);
 				var newModel = new this.relatedModelDef.backboneModel();
 				newModel.set(this.relationDef.relatedJoinColumn, this.model.get(this.relationDef.joinColumn));
 				
@@ -767,12 +767,19 @@
 					scaffold: this.scaffold,
 					isEmbeddedForm: true
 				})
-				this.$ul.append(view.render().$el);
+				var embeddedView = view.render().$el;
+				embeddedView.append('<a class="bbs-cancelAddRelated">cancel</a>');
+				this.$ul.append(embeddedView);
 
 				this.embeddedForms.push(view);
 				
 				//turn back the join column to the original from the hidden
 				this.relatedModelDef.columns[this.relationDef.relatedJoinColumn].editDisplayView = origEditDisplayView;
+			},
+			cancelAddRelated: function(ev) {
+				var divContainer = $(ev.currentTarget).closest('div');
+				this.embeddedForms.splice(divContainer.index(),1);
+				divContainer.remove();
 			},
 			saveEmbeddedForms: function(parentModel) {
 				for (var i in this.embeddedForms) {
@@ -951,12 +958,19 @@
 				this.modelName = this.options.modelName;
 				this.model = this.options.model;
 				
-				this.model.on('change', this.render, this);
-				this.model.on('destroy', this.remove, this); 
+				if(this.model) {
+					this.model.on('change', this.render, this);
+					this.model.on('destroy', this.remove, this);
+				}
 			},
 			render: function () {
-				var toStringValue = this.scaffold.modelDefs[this.modelName].modelToString(this.model, this.modelName, this.scaffold);
-				this.$el.html(toStringValue);
+				if(this.model) {
+					var toStringValue = this.scaffold.modelDefs[this.modelName].modelToString(this.model, this.modelName, this.scaffold);
+					this.$el.html(toStringValue);
+				}
+				else {
+					this.$el.html('');
+				}
 				return this;
 			}
 		}),
