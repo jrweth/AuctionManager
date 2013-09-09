@@ -7,11 +7,8 @@
 </style>
 <div style="margin-bottom: 20px">
     <a class="btn" onclick="
-        $('#step2, #step3').removeClass('active');
-        $('#step1').addClass('active');
-        $.bbscaffold.router.navigate('model/contact', {trigger: true});
-        $('#scaffold-content').show();
-        $('#bidder-number-report').hide();
+        window.location = '{{ webRoot }}register#/model/contact';
+        window.location.reload();
    ">start over/register new</a>
 </div>
 <ul class="nav nav-tabs">
@@ -62,7 +59,7 @@ var init = {
          <% }} %> \
          </thead><tbody></tbody></table>',
          modelEditActions: '<div class="bbs-editActions" style="margin-top: 20px"> \
-            <button class="bbs-confirm btn btn-primary">save and generated bidder number</button> \
+            <button class="bbs-confirm btn btn-primary">save and generate bidder number</button> \
          </div>',
          modelEditRemoveRelated: '<a class="bbs-delete btn btn-mini" style="cursor: pointer">remove</a>',
          modelEditAddRelated: '<a class="bbs-addRelated btn btn-mini" style="cursor: pointer">add</a>'
@@ -80,6 +77,7 @@ var init = {
                     first_name: {},
                     middle_name: {},
                     last_name: {},
+                    drivers_license: {},
                     spouse_name: {},
                     organization_name: {},
                     affiliation_id: {
@@ -123,6 +121,7 @@ var init = {
             },
             affiliation: {
                 label: 'Affiliations',
+                comparator: 'name',
                 columns: {
                     name: {},
                     auction_group_id: {
@@ -240,7 +239,6 @@ var init = {
     	},
     	saveSuccess: function(model, response) {
     		this.collection.add(model);
-    		console.log('added to collection' + this.modelName);	
     		//save the embedded forms
     		var bidderModel = new this.scaffold.modelDefs.bidder.backboneModel();
     		bidderModel.save({contact_id: model.get('id')}, {
@@ -254,8 +252,9 @@ var init = {
             $('#step3').addClass('active');
         	$('#scaffold-content').hide();
         	$('#bidder-number-report').show();
-        	$('#bidder-number').html(model.get('bidder_number'));
-    	    console.log(this.scaffold);
+        	var contact = $.bbscaffold.modelDefs.contact.backboneCollection.get(model.get('contact_id'));
+        	$('#bidder-number').html(contact.get('first_name') + ' ' + contact.get('last_name') + ' #' + model.get('bidder_number'));
+        	window.scrollTo(0, 0);
     	}
     });
     $.bbscaffold.setupScaffold('#scaffold-content');
