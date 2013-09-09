@@ -50,6 +50,12 @@
                     first_name: {},
                     middle_name: {},
                     last_name: {},
+                    bidder_number: {
+                        label: 'bidder number',
+                        listDisplayView: 'modelColumnHasManyModelToString',
+                        editDisplayView: 'none',
+                        relatedModelKey: 'bidder'
+                    },
                     spouse_name: {},
                     drivers_license: {},
                     organization_name: {},
@@ -97,6 +103,39 @@
                         joinColumn: 'affiliation_id',
                         relatedJoinColumn: 'id',
                         relatedModelName: 'affiliation'
+                    },
+                    bidder: {
+                        joinColumn: 'id',
+                        relatedJoinColumn: 'contact_id',
+                        relatedModelName: 'bidder'
+                    }
+                }
+            },
+            bidder: {
+                label: 'Bidder',
+                columns: {
+                    bidder_number: {},
+                    auction_id: {
+                        listDisplayView: 'none',
+                        editDisplayView: 'modelEditColumnHidden',
+                        defaultValue: '{{ auctionId }}'
+                    },
+                    contact_id: {
+                        label: 'affiliation',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'contact'
+                    }
+                },
+                modelToString: function(model, modelDef, scaffold) {
+                    return model.get('bidder_number');
+                },
+                relatedModels: {
+                    contact: {
+                        joinColumn: 'contact_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'contact'
                     }
                 }
             },
