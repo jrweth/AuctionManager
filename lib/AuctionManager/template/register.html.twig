@@ -8,7 +8,7 @@
 <div style="margin-bottom: 20px">
     <a class="btn" onclick="
         window.location = '{{ webRoot }}register#/model/contact';
-        window.location.reload();
+        window.location.reload(); return false;
    ">start over/register new</a>
 </div>
 <ul class="nav nav-tabs">
@@ -223,6 +223,7 @@ var init = {
             $('#step1').removeClass('active');
             $('#step2').addClass('active');
             this.scaffold.router.navigate('model/' + this.modelName + '/edit/' + this.model.get('id'), {trigger: true});
+            window.scrollTo(0,0);
         }
     });
 
