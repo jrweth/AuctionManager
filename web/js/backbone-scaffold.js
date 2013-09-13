@@ -150,12 +150,12 @@
 		//make sure that the collection has already been initialized
 		if(this.modelDefs[modelName].collectionInitializationStatus == 'not initialized') {
 			this.initModel(modelName);
-			setTimeout(reRenderModel(this, modelName), 100);
+			setTimeout(reRenderModel(this, modelName), 250);
 			return false;
 		}
 		//if it is in the process of initializing, just wait a bit
 		else if(this.modelDefs[modelName].collectionInitializationStatus == 'initializing') {
-			setTimeout(reRenderModel(this, modelName), 100);
+			setTimeout(reRenderModel(this, modelName), 250);
 			return false;
 		}
 		
@@ -199,11 +199,11 @@
 		
 		if(this.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
 			this.renderModel(modelName);
-			setTimeout(reDisplayModel(this, modelName), 100);
+			setTimeout(reDisplayModel(this, modelName), 250);
 			return false;
 		}
 		else if(this.modelDefs[modelName].displayInitializationStatus == 'initializing') {
-			setTimeout(reDisplayModel(this, modelName), 100);
+			setTimeout(reDisplayModel(this, modelName), 250);
 			return false;
 		}
 		
@@ -251,7 +251,7 @@
 				//related model not yet instantiated - instantiate now and come back later
 				if(this.modelDefs[relatedModelName].collectionInitializationStatus != 'initialized') {
 					console.log("related collection not initialized so starting over");
-					setTimeout(reInitModel(this, modelName, startingModelName), 100);
+					setTimeout(reInitModel(this, modelName, startingModelName), 250);
 					return false;
 				}
 			}
@@ -1232,11 +1232,11 @@
 			//check to see if the edit div is already initiated
 			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
 				this.scaffold.displayModel(modelName);
-				setTimeout(reInsertModel(this.scaffold, modelName), 100);
+				setTimeout(reInsertModel(this.scaffold, modelName), 250);
 				return false;
 			}
 			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'initializing') {
-				setTimeout(reInsertModel(this.scaffold, modelName), 100);
+				setTimeout(reInsertModel(this.scaffold, modelName), 250);
 				return false;
 			}
 
@@ -1266,11 +1266,11 @@
 			//check to see if the edit div is already initiated
 			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
 				this.scaffold.displayModel(modelName);
-				setTimeout(reEditModel(this.scaffold, modelName, id), 100);
+				setTimeout(reEditModel(this.scaffold, modelName, id), 250);
 				return false;
 			}
 			if(this.scaffold.modelDefs[modelName].displayInitializationStatus == 'initializing') {
-				setTimeout(reEditModel(this.scaffold, modelName, id), 100);
+				setTimeout(reEditModel(this.scaffold, modelName, id), 250);
 				return false;
 			}
 			
