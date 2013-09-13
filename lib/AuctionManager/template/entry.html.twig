@@ -129,7 +129,10 @@
                     }
                 },
                 modelToString: function(model, modelDef, scaffold) {
-                    return model.get('bidder_number');
+                    var contactModelDef = scaffold.modelDefs.contact;
+                    var contactModel = contactModelDef.backboneCollection.findWhere({id: model.get('contact_id')});
+                    return '#' + model.get('bidder_number')
+                        + ' (' + contactModelDef.modelToString(contactModel, contactModelDef, scaffold) + ')';
                 },
                 relatedModels: {
                     contact: {
@@ -144,6 +147,7 @@
                 modelToString: function(model, modelDef, scaffold) {
                     return model.get('title');
                 },
+                comparator: 'title',
                 columns: {
                     auction_id: {
                         listDisplayView: 'none',
@@ -323,6 +327,52 @@
                         joinColumn: 'auction_block_id',
                         relatedJoinColumn: 'id',
                         relatedModelName: 'auction_block'
+                    },
+                    item: {
+                        joinColumn: 'item_id',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'item'
+                    }
+                }
+            },
+            purchase: {
+                label: 'Winning Bids/Purchases',
+                showInMenu: true,
+                modelToString: function(model, modelDef, scaffold) {
+                    var bidderModelDef = scaffold.modelDefs.bidder;
+                    var bidderModel = bidderModelDef.backboneCollection.findWhere({id: model.get('bidder_id')});
+                    var itemModelDef = scaffold.modelDefs.item;
+                    var itemModel = itemModelDef.backboneCollection.findWhere({id: model.get('item_id')});
+                    return bidderModelDef.modelToString(blockModel, blockModelDef, scaffold) 
+                        + ' - ' + itemModelDef.modelToString(itemModel, itemModelDef, scaffold)
+                        + ' - $' + model.get('amount');
+                },
+                comparator: 'id',
+                columns: {
+                    bidder_id: {
+                        label: 'bidder',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'bidder'
+                    },
+                    item_id: {
+                        label: 'item',
+                        listDisplayView: 'modelColumnLookup',
+                        editDisplayView: 'modelEditColumnCollectionDropdown',
+                        emptyOption: 'Choose One...',
+                        relatedModelName: 'item'
+                    },
+                    amount: {required: true},
+                    notes: {
+                        editDisplayTemplate: 'modelEditColumnTextArea'
+                    }
+                },
+                relatedModels: {
+                    bidder: {
+                        joinColumn: 'bidder',
+                        relatedJoinColumn: 'id',
+                        relatedModelName: 'bidder'
                     },
                     item: {
                         joinColumn: 'item_id',

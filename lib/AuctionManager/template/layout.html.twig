@@ -30,10 +30,15 @@
                         <li><a href="{{ webRoot }}">DB Home</a></li>
                         <li class="divider-vertical"></li>
                         <li><a href="#" onclick="
-                                window.location = '{{ webRoot }}register#/model/contact';
-                                window.location.reload(); return false;">
+                                if(window.location == '{{ webRoot }}register#/model/contact') {
+                                    window.location.reload();
+                                } else { 
+                                    window.location = '{{ webRoot }}register#/model/contact'
+                                } return false;">
                             Register</a>
                         </li>
+                        <li class="divider-vertical"></li>
+                        <li><a href="{{ webRoot }}entry/purchase#model/purchase">Bids/Purchases</a></li>
                         <li class="divider-vertical"></li>
                         <li><a href="{{ webRoot }}entry/contact#model/contact">Contacts</a></li>
                         <li class="divider-vertical"></li>
