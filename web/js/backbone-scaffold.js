@@ -146,19 +146,6 @@
 				scaffold.renderModel(modelName);
 			}
 		};
-		
-		//make sure that the collection has already been initialized
-		if(this.modelDefs[modelName].collectionInitializationStatus == 'not initialized') {
-			this.initModel(modelName);
-			setTimeout(reRenderModel(this, modelName), 250);
-			return false;
-		}
-		//if it is in the process of initializing, just wait a bit
-		else if(this.modelDefs[modelName].collectionInitializationStatus == 'initializing') {
-			setTimeout(reRenderModel(this, modelName), 250);
-			return false;
-		}
-		
 
 		//if display is already  initialized, don't try it again
 		if(this.modelDefs[modelName].displayInitializationStatus == 'initialized') {
@@ -170,7 +157,20 @@
 			return false;
 		}
 		
-		if(this.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
+		//make sure that the collection has already been initialized
+		if(this.modelDefs[modelName].collectionInitializationStatus == 'not initialized') {
+			this.modelDefs[modelName].displayInitializationStatus == 'waiting for collection initialization';
+			this.initModel(modelName);
+			setTimeout(reRenderModel(this, modelName), 250);
+			return false;
+		}
+		//if it is in the process of initializing, just wait a bit
+		else if(this.modelDefs[modelName].collectionInitializationStatus == 'initializing') {
+			setTimeout(reRenderModel(this, modelName), 250);
+			return false;
+		}
+		
+		if(this.modelDefs[modelName].collectionInitializationStatus == 'initialized') {
 			this.modelDefs[modelName].displayInitializationStatus = 'initializing';
 			this.modelDefs[modelName].backboneView = new this.views.modelView({
 				el: ".bbs-model-" + modelName,
@@ -178,10 +178,9 @@
 				modelName: modelName,
 				scaffold: this
 			});
-		}
-		
 
-		this.modelDefs[modelName].displayInitializationStatus = 'initialized';
+			this.modelDefs[modelName].displayInitializationStatus = 'initialized';
+		}
 	};
 		
 	BackboneScaffold.prototype.displayModel = function(modelName) {
