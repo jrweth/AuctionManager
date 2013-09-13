@@ -404,7 +404,7 @@
 				<% } %> \
 				<% for( var i in options) { %> \
 					<option value="<%- options[i].value %>" \
-					<% if(options[i] == value) { %> selected="selected" <% } %> \
+					<% if(options[i].value == value) { %> selected="selected" <% } %> \
 					><%- options[i].display %></option> \
 				<% } %> \
 			</select></div>',
