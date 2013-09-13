@@ -247,9 +247,9 @@
 		
 		//if this is the starting model, make sure all other collections are initialized before proceeding
 		if(modelName == startingModelName) {
-			for(var relatedModelName in this.modelDefs[modelName].relatedModels) {
+			for(var otherModelName in this.modelDefs) {
 				//related model not yet instantiated - instantiate now and come back later
-				if(this.modelDefs[relatedModelName].collectionInitializationStatus != 'initialized') {
+				if(otherModelName != modelName && this.modelDefs[otherModelName].collectionInitializationStatus == 'initializing') {
 					console.log("related collection not initialized so starting over");
 					setTimeout(reInitModel(this, modelName, startingModelName), 250);
 					return false;
@@ -387,7 +387,9 @@
 		modelListTableCollectionLookup: '<td> \
 			<% if (value) { \
 				var relatedModel = scaffold.modelDefs[colDef.relatedModelName].backboneCollection.get(value);  \
-				print(scaffold.modelDefs[colDef.relatedModelName].modelToString(relatedModel, scaffold.modelDefs[colDef.relatedModelName], scaffold)); \
+				if (relatedModel != undefined) { \
+					print(scaffold.modelDefs[colDef.relatedModelName].modelToString(relatedModel, scaffold.modelDefs[colDef.relatedModelName], scaffold)); \
+				} \
 			} %></td>',
 		modelListTableCollectionHasMany: '<td><ul><% \
 				for(var index in relatedModels) print("<li>" + relatedModelDef.modelToString(relatedModels[index], relatedModelDef, scaffold) + "</li>") \
