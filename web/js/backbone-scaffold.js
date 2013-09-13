@@ -251,7 +251,7 @@
 				//related model not yet instantiated - instantiate now and come back later
 				if(this.modelDefs[relatedModelName].collectionInitializationStatus != 'initialized') {
 					reInitModel(this.scaffold, relatedModelName, startingModelName);
-					return;
+					//return;
 				}
 			}
 		}
