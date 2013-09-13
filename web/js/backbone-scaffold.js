@@ -221,16 +221,19 @@
 	/**
 	 * Initialize the model collection
 	 */
-	BackboneScaffold.prototype.initModel = function(modelName) {
-		this.debugLog('initializing model:' + modelName);
+	BackboneScaffold.prototype.initModel = function(modelName, startingModelName) {
+		this.debugLog('initializing model:' + modelName + ' starting Model:' + startingModelName);
+		if(startingModelName == undefined) {
+			startingModelName = modelName;
+		}
 		
 		if(this.modelDefs[modelName].collectionInitializationStatus == 'not initialized') {
 			this.modelDefs[modelName].collectionInitializationStatus = 'initializing';
 		}
 		
-		var reInitModel = function(scaffold, modelName) {
+		var reInitModel = function(scaffold, modelName, startingModelName) {
 			return function(collection) {
-				scaffold.initModel(modelName);
+				scaffold.initModel(modelName, startingModelName);
 			}
 		};
 		
@@ -238,7 +241,17 @@
 		for(var relatedModelName in this.modelDefs[modelName].relatedModels) {
 			//related model not yet instantiated - instantiate now and come back later
 			if(this.modelDefs[relatedModelName].collectionInitializationStatus == 'not initialized') {
-				this.initModel(relatedModelName);
+				this.initModel(relatedModelName, startingModelName);
+			}
+		}
+		
+		//if this is the starting model, make sure all other collections are initialized before proceeding
+		if(modelName == startingModelName) {
+			for(var relatedModelName in this.modelDefs[modelName].relatedModels) {
+				//related model not yet instantiated - instantiate now and come back later
+				if(this.modelDefs[relatedModelName].collectionInitializationStatus != 'initialized') {
+					reInitModel(this.scaffold, relatedModelName, startingModelName);
+				}
 			}
 		}
 		
