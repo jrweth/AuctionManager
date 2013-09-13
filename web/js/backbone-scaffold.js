@@ -250,8 +250,9 @@
 			for(var relatedModelName in this.modelDefs[modelName].relatedModels) {
 				//related model not yet instantiated - instantiate now and come back later
 				if(this.modelDefs[relatedModelName].collectionInitializationStatus != 'initialized') {
-					reInitModel(this.scaffold, relatedModelName, startingModelName);
-					//return;
+					console.log("related collection not initialized so starting over");
+					setTimeout(reInitModel(this, modelName, startingModelName), 250);
+					return false;
 				}
 			}
 		}
