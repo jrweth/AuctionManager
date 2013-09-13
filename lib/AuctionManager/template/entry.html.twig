@@ -150,8 +150,8 @@
                         editDisplayView: 'modelEditColumnHidden',
                         defaultValue: '{{ auctionId }}'
                     },
-                    title: {},
-                    donor_display_name: {},
+                    title: {required: true},
+                    donor_display_name: {required: true},
                     item_contacts: {
                         label: 'donor contact(s)',
                         listDisplayView: 'modelColumnManyToManyModelToString',
@@ -213,7 +213,7 @@
             auction_block: {
                 label: 'Auction Blocks',
                 columns: {
-                    name: {},
+                    name: {required: true},
                     auction_id: {
                         listDisplayView: 'none',
                         editDisplayView: 'modelEditColumnHidden',
@@ -261,14 +261,16 @@
                         listDisplayView: 'modelColumnLookup',
                         editDisplayView: 'modelEditColumnCollectionDropdown',
                         emptyOption: 'Choose One...',
-                        relatedModelName: 'contact'
+                        relatedModelName: 'contact',
+                        required: true,
                     },
                     item_id: {
                         label: 'item',
                         listDisplayView: 'modelColumnLookup',
                         editDisplayView: 'modelEditColumnCollectionDropdown',
                         emptyOption: 'Choose One...',
-                        relatedModelName: 'item'
+                        relatedModelName: 'item',
+                        required: true,
                     }
                 },
                 relatedModels: {
@@ -312,7 +314,7 @@
                         relatedModelName: 'item'
                     },
                     item_order: {
-                        defaultValue: 0,
+                        defaultValue: 999,
                         editDisplayView: 'modelEditColumnHidden',
                     }
                 },
@@ -332,7 +334,7 @@
             category: {
                 label: 'Categories',
                 columns: {
-                    name: {},
+                    name: {required: true},
                     auction_group_id: {
                         listDisplayView: 'none',
                         editDisplayView: 'modelEditColumnHidden',
@@ -346,7 +348,7 @@
             affiliation: {
                 label: 'Affiliations',
                 columns: {
-                    name: {},
+                    name: {required: true},
                     auction_group_id: {
                         listDisplayView: 'none',
                         editDisplayView: 'modelEditColumnHidden',

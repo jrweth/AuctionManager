@@ -338,6 +338,7 @@
 		type: 'string',	   //type of variable string, primaryId, integer, decimal, date, file
 		length: '',		   //maximum length of the string
 		label: '',			//if not set defaults to column key
+		required: false,	//if the field is required
 		listDisplayView: 'modelColumnValue', //none, modelColumnValue, modelColumnManyToManyModelToString, modelColumnHasManyModeltoString, modelColumnDate, lookup
 		editDisplayView: 'modelEditColumnText',  //
 		editDisplayTemplate: 'modelEditColumnText',  //
@@ -392,11 +393,11 @@
 				for(var index in relatedModels) print("<li>" + relatedModelDef.modelToString(relatedModels[index], relatedModelDef, scaffold) + "</li>") \
 			%></ul></td>',
 		//edit templates
-		modelEditColumnText: '<label><%- label %></label> \
+		modelEditColumnText: '<label><%- label %><% if (required) { %> * <% } %></label> \
 						<div><input class="bbs-editInputText" name="<%= columnName %>" value="<%= value %>" /></div>',
 		modelEditColumnTextArea: '<label><%- label %></label> \
 			<div><textarea class="bbs-editInputTextArea" name="<%= columnName %>"><%= value %></textarea></div>',
-		modelEditColumnDropdown: '<label><%- label %></label> \
+		modelEditColumnDropdown: '<label><%- label %><% if (required) { %> * <% } %></label> \
 			<div><select class="bbs-editInputSelect" name="<%= columnName %>" > \
 				<% if(emptyOption != undefined) { %> \
 					<option value=""><%- emptyOption %></option> \
@@ -623,7 +624,23 @@
 				'click .bbs-cancel' : 'cancel'
 			},
 			save: function () {
-				this.model.save(this.$el.children('form').serializeObject(), {
+				var missingRequired = false;
+				var missingRequiredFields = '';
+				var $form = this.$el.children('form');
+				for(columnName in this.modelDef.columns) {
+					if(this.modelDef.columns[columnName].required) {
+						var $field = $form.find('[name="' + columnName + '"]');
+						if($field.size() == 1 && $field.val().length == 0) {
+							missingRequired = true;
+							missingRequiredFields = missingRequiredFields + ' - ' + this.modelDef.columns[columnName].label;
+						}
+					}
+				}
+				if(missingRequired) {
+					alert('You must supply values for the following fields: ' + missingRequiredFields);
+					return false;
+				}
+				this.model.save($form.serializeObject(), {
 					wait: true,
 					error: function(model, error){ alert(error.responseText);},
 					success: this.saveSuccess
@@ -664,6 +681,7 @@
 				this.$el.html(this.template({
 					label: this.columnDef.label,
 					columnName: this.columnName,
+					required: this.columnDef.required,
 					value: this.model.get(this.columnName)
 				}));
 			}
@@ -695,6 +713,7 @@
 				this.$el.html(this.template({
 					label: this.columnDef.label,
 					columnName: this.columnName,
+					required: this.columnDef.required,
 					value: this.model.get(this.columnName),
 					options: options,
 					emptyOption: this.columnDef.emptyOption
