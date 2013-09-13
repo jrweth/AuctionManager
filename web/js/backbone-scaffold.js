@@ -1086,7 +1086,7 @@
 						this.$el.append(this.relatedModelDef.modelToString(
 								this.relatedModel,
 								this.relatedModelDef,
-								this.scafold
+								this.scaffold
 						));
 					}
 				}
