@@ -166,7 +166,7 @@
 		}
 		//if it is in the process of initializing, just wait a bit
 		else if(this.modelDefs[modelName].collectionInitializationStatus != 'initialized') {
-			this.modelDefs[modelName].displayInitializationStatus == 'waiting for collection initialization';
+			this.modelDefs[modelName].displayInitializationStatus = 'waiting for collection initialization';
 			setTimeout(reRenderModel(this, modelName), 250);
 			return false;
 		}
