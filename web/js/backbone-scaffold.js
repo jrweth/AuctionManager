@@ -165,7 +165,7 @@
 			return false;
 		}
 		//if it is in the process of initializing, just wait a bit
-		else if(this.modelDefs[modelName].collectionInitializationStatus == 'initializing') {
+		else if(this.modelDefs[modelName].collectionInitializationStatus != 'initialized') {
 			this.modelDefs[modelName].displayInitializationStatus == 'waiting for collection initialization';
 			setTimeout(reRenderModel(this, modelName), 250);
 			return false;
@@ -198,6 +198,7 @@
 		var $model = this.elementGetters.model(this.$scaffold, modelName);
 		
 		if(this.modelDefs[modelName].displayInitializationStatus == 'not initialized') {
+			console.log('display calling render - current status = ' + this.modelDefs[modelName].displayInitializationStatus);
 			this.renderModel(modelName);
 			setTimeout(reDisplayModel(this, modelName), 250);
 			return false;
