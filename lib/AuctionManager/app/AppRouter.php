@@ -51,6 +51,10 @@ class AppRouter
             echo $container['twig']->render('layout.html.twig');
         });
         
+        $this->app->get('/modelDefs.js', $authenticate($app), function() use($container) {
+            echo $container['twig']->render('modelDefs.js.twig');
+        });
+        
         $this->app->get('/entry/:model', $authenticate($app), function() use($container) {
             echo $container['twig']->render('entry.html.twig', array('pageTitle' => 'Contact List'));
         });
@@ -60,6 +64,12 @@ class AppRouter
             echo $container['twig']->render('register.html.twig');
         });
        
+        $this->app->get('/checkout', $authenticate($app), function() use($container) {
+            echo $container['twig']->render('checkout.html.twig', array(
+                'pageTitle' => 'Checkout'
+            ));
+        });
+        
         $app->get("/logout", function () use ($app) {
            unset($_SESSION['user']);
             $app->redirect($app->container['config']['webRoot']);

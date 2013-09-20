@@ -38,6 +38,15 @@
                             Register</a>
                         </li>
                         <li class="divider-vertical"></li>
+                        <li><a href="#" onclick="
+                                if(window.location == '{{ webRoot }}checkout#/model/bidder') {
+                                    window.location.reload();
+                                } else { 
+                                    window.location = '{{ webRoot }}checkout#/model/bidder'
+                                } return false;">
+                            Checkout</a>
+                        </li>
+                        <li class="divider-vertical"></li>
                         <li><a href="{{ webRoot }}entry/purchase#model/purchase">Bids/Purchases</a></li>
                         <li class="divider-vertical"></li>
                         <li><a href="{{ webRoot }}entry/contact#model/contact">Contacts</a></li>
@@ -90,6 +99,7 @@
         <script src="{{ webRoot }}DataTables/js/jquery.dataTables.js"></script>
         <script src="{{ webRoot }}TableTools/js/ZeroClipboard.js"></script>
         <script src="{{ webRoot }}TableTools/js/TableTools.min.js"></script>
+        <script src="{{ webRoot }}bootstrap/js/bootstrap.js"></script>
         {% endblock %}
         
         {% block customJS %}{% endblock %}

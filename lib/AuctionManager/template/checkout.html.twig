@@ -1,0 +1,260 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<style>
+    .bbs-modelHeader { display: none}
+    td ul {list-style-type: none}
+</style>
+<h1>Checkout</h1>
+<div style="margin-bottom: 20px">
+    <!-- a class="btn" onclick="
+        window.location = '{{ webRoot }}checkout#/model/bidder';
+        window.location.reload(); return false;
+   ">start over/register new</a-->
+</div>
+<ul class="nav nav-tabs" id="stepTabs">
+  <li id="stepTab1" class="active"><a data-target="#step1" data-toggle="tab">Step 1 - Find Bidder</a></li>
+  <li id="stepTab2"><a data-target="#step2" data-toggle="tab">Step 2 - Confirm Purchases/Add Payments</a></li>
+  <li id="stepTab3"><a data-target="#step3" data-toggle="tab">Step 3 - Print Receipt</a></li>
+</ul>
+<div class="tab-content">
+  <div class="tab-pane active" id="step1">
+      <div id="scaffold-content"></div>
+  </div>
+  <div class="tab-pane" id="step2">
+      <div><h1 class="bidderName">Bidder</h1></div>
+      <div>Balance: $<span class="bidderBalance"></span></div>
+      <div class="row">
+          <div class="span4">
+              <h2>Purchases</h2>
+              <table class="purchasesTable table-striped dataTable">
+                  <thead><th>item</th><th>amount</th></thead>
+                  <tbody></tbody>
+                  <tfoot>
+                      <tr><th>Total</th><th class="purchaseTotal">0</th></tr>
+                      <tr>
+              </table>
+              <a onclick="$('#addItem').show()">add additional purchase</a>
+              <div id="addItem" style="display: none">
+                  <div>
+                  <select><option value="">choose item..</option></select>
+                  </div>
+                  <button class="addItem btn">Add Item</button> 
+                  <a onclick="$('#addItem').hide()">cancel</a>
+              </div>
+          </div>
+          <div class="span8">
+          <h2>Payments</h2>
+          <table class="paymentTable table-striped dataTable">
+              <thead><tr><th>date</th><th>type</th><th>notes</th><th>amount</th></tr></thead>
+              <tbody></tbody>
+              <tfoot><tr><th>&#160;</th><th>&#160;</th><th>Total</th><th class="paymentTotal">0</th></tr></tfoot>
+          </table>
+          <button class="btn-primary btn addPayment">Add Payment</button>
+          </div>
+      </div>
+  </div>
+  <div class="tab-pane" id="step3">
+      step 3
+  </div>
+</div>
+
+
+
+<div id="bidder-number-report">
+<h1 id="bidder-name"></span>
+<h1 id="bidder-number"></span>
+</div>
+
+{% endblock %}
+
+{% block customJS %}
+<script src="{{ webroot }}modelDefs.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+
+
+
+var init = {
+        options: {
+            debug: true,
+            apiRoot: '{{ webRoot}}api/',
+            modelInitOrder: ['category', 'contact', 'item', 'item_contact']
+        },
+        templates: {
+          scaffold: '<div class="bbs-scaffold"> \
+                  <ul class="bbs-modelMenu nav navbar-nav" style="display: none"></ul></div> \
+              <div class="bbs-models" style="clear:both"    ></div> \
+           </div>',
+          modelListTableActions: '<td><button class="bbs-edit btn">select</button></td> \
+           </td>',
+         model: '<div class="bbs-model bbs-model-<%- name %>" style="display: none"> \
+            <h1 class="bbs-modelHeader"><%- label %></h1> \
+            <div class="bbs-modelSubSections"> \
+               <div class="bbs-modelList bbs-modelSubSection"> \
+                  <div class="bbs-modelAddNew" style="margin-bottom: 10px"> \
+                     If the person has not yet registered and has no bidder number you need to first register: <a href="{{ webRoot }}register#/model/contact" class="bbs-addNew btn btn-primary">register</a> \
+                  </div> \
+               </div> \
+               <div class="bbs-modelEdit bbs-modelSubSection"></div> \
+               <div class="bbs-modelDetail bbs-modelSubSection"></div> \
+            </div> \
+         </div>',
+         modelListTable: '<table class="bbs-modelListTable table table-striped"><thead><th width="50px">&#160</th> \
+            <% for(columnName in columns) { if (columns[columnName].listDisplayView != "none") { %> \
+            <th><%- columns[columnName].label %></th> \
+         <% }} %> \
+         </thead><tbody></tbody></table>',
+         modelEditActions: '<div class="bbs-editActions" style="margin-top: 20px"> \
+            <button class="bbs-confirm btn btn-primary">save and generate bidder number</button> \
+         </div>',
+         modelEditRemoveRelated: '<a class="bbs-delete btn btn-mini" style="cursor: pointer">remove</a>',
+         modelEditAddRelated: '<a class="bbs-addRelated btn btn-mini" style="cursor: pointer">add</a>'
+        },
+        modelDefs: $.bbscaffoldModelDefs
+    };
+    $.extend( true, $.fn.DataTable.TableTools.classes, {
+        "container": "btn-group",
+        "buttons": {
+            "normal": "btn",
+            "disabled": "btn disabled"
+        }
+    });
+    $.bbscaffold = new BackboneScaffold(init);
+    
+    $.bbscaffold.views.modelView = BackboneScaffold.prototype.defaults.views.modelView.extend({
+        addAll: function() {
+            //initiate the data table
+            $table = this.$el.find('.bbs-modelListTable');
+            $table.dataTable().fnDestroy();
+            
+            this.scaffold.debugLog('Adding All rows for model ' + this.modelName);
+            this.$el.find('.bbs-modelListTable tbody').html(''); // clean the list
+            this.collection.each(this.addOne, this);
+
+            $table.dataTable({
+                "sDom": "<'row'<'span6'fil><'span6'r>><'row'<'span12't>>",
+                "bScrollCollapse": true,
+                "bPaginate": false,
+                "bStateSave": false,
+                "aaSorting": [[ 4, "asc" ]],
+                "aoColumnDefs": [
+                {
+                    bSortable: false,
+                    aTargets: [ 0]
+                 }
+               ]
+            });
+        },
+		addNew: function() {
+            $('#step1').removeClass('active');
+            $('#step2').addClass('active');
+			this.scaffold.router.navigate('model/' + this.modelName + '/insert', {trigger: true});
+		},
+    });
+    
+
+    $.bbscaffold.purchasesViewType = Backbone.View.extend({
+    	initialize: function() {
+        	console.log(this.options);
+        	this.scaffold = this.options.scaffold;
+    	    this.purchaseCollection = this.scaffold.modelDefs.purchase.backboneCollection;
+    	    this.paymentCollection = this.scaffold.modelDefs.payment.backboneCollection;
+    	    this.itemCollection = this.scaffold.modelDefs.item.backboneCollection;
+    	    this.bidder_id = this.options.bidder_id;
+    	    this.bidder = this.scaffold.modelDefs.bidder.backboneCollection.get(this.bidder_id);
+    	    this.bidderInfo = this.scaffold.modelDefs.bidder.modelToString(this.bidder, this.scaffold.modelDefs.bidder, this.scaffold);
+    	    this.$el.find('tbody').html('');
+			_.bindAll(this, "addPayment");
+    	    this.render();
+    	},
+    	render: function() {
+        	this.$el.find('.bidderName').html('Bidder ' + this.bidderInfo);
+        	var purchaseTotal = 0.0;
+		    var oddEven = 'even';
+    		for (var i = 0; i < this.purchaseCollection.length; i++) {
+    		    var purchase = this.purchaseCollection.at(i);
+        		if(purchase.get('bidder_id') == this.bidder_id) {
+            		if( oddEven == 'even') {oddEven = 'odd';} else {oddEven = 'even';}
+        		    var item = this.itemCollection.get(purchase.get('item_id'));
+	    	        this.$el.find('.purchasesTable tbody').append('<tr class="' + oddEven + '"><td>' + item.get('title') + '</td><td>$' + purchase.get('amount') + '</td></tr>');
+	    	        purchaseTotal = purchaseTotal + parseFloat(purchase.get('amount'), 10);
+        		}
+			}
+			this.$el.find('.purchaseTotal').html('$' + purchaseTotal);
+
+			var paymentTotal = 0.0;
+    		for (var i = 0; i < this.paymentCollection.length; i++) {
+    		    var payment = this.paymentCollection.at(i);
+        		if(payment.get('bidder_id') == this.bidder_id) {
+            		if( oddEven == 'even') {oddEven = 'odd';} else {oddEven = 'even';}
+	    	        this.$el.find('.paymentTable tbody').append('<tr class="' + oddEven + '"> \
+	    	    	        <td>' + payment.get('payment_date') + '</td> \
+	    	    	        <td>' + payment.get('payment_type') + '</td> \
+	    	    	        <td>' + payment.get('notes') + '</td> \
+	    	    	        <td>$' + payment.get('amount') + '</td></tr>');
+	    	        paymentTotal = paymentTotal + parseFloat(payment.get('amount'), 10);
+        		}
+			}
+			this.$el.find('.paymentTotal').html('$' + paymentTotal);
+			this.$el.find('.bidderBalance').html(purchaseTotal - paymentTotal);
+        },
+    	events: {
+    		'click .addPayment' : 'addPayment'
+    	},
+    	addPayment: function() {
+    		this.scaffold.debugLog('Add New Payment');
+    		this.scaffold.router.navigate('model/payment/insert', {trigger: true});
+    	},
+    });
+    
+    $.bbscaffold.views.modelTableRow = BackboneScaffold.prototype.defaults.views.modelTableRow.extend({
+        edit: function () {
+            $('#stepTab1, #step1').removeClass('active');
+            $('#stepTab2, #step2').addClass('active');
+            var purchaseView = new $.bbscaffold.purchasesViewType({
+                scaffold: this.scaffold,
+                bidder_id: this.model.get('id'),
+                el: $('#step2')}
+            );
+
+            window.scrollTo(0,0);
+        }
+    });
+
+    $.bbscaffold.views.modelEdit = BackboneScaffold.prototype.defaults.views.modelEdit.extend({
+    	events: {
+    		'click .bbs-confirm' : 'confirm',
+    	},
+    	confirm: function () {
+    		this.model.save(this.$el.children('form').serializeObject(), {
+    			wait: true,
+    			error: function(model, error){ alert(error.responseText);},
+    			success: this.saveSuccess
+    		});
+    	},
+    	saveSuccess: function(model, response) {
+    		this.collection.add(model);
+    		//save the embedded forms
+    		var bidderModel = new this.scaffold.modelDefs.bidder.backboneModel();
+    		bidderModel.save({contact_id: model.get('id')}, {
+    	    	wait: true,
+    	    	error: function(model, error) { alert(error.responseText);},
+    	    	success: this.bidderSaveSuccess
+    		});
+    	},
+    	bidderSaveSuccess: function(model, response) {
+            $('#step2').removeClass('active');
+            $('#step3').addClass('active');
+        	$('#scaffold-content').hide();
+        	$('#bidder-number-report').show();
+        	var contact = $.bbscaffold.modelDefs.contact.backboneCollection.get(model.get('contact_id'));
+        	$('#bidder-number').html(contact.get('first_name') + ' ' + contact.get('last_name') + ' #' + model.get('bidder_number'));
+        	window.scrollTo(0, 0);
+    	}
+    });
+    $.bbscaffold.setupScaffold('#scaffold-content');
+    
+</script>
+{% endblock %}
