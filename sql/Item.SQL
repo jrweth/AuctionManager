@@ -20,12 +20,17 @@ CREATE TABLE Item
 	item_location VARCHAR(255),
 	donor_thanked_by VARCHAR(255),
 	donor_committee_contact VARCHAR(100),
+	featured_item boolean DEFAULT 'no' NOT NULL,
+	public_display_item VARCHAR(10) DEFAULT 'no' NOT NULL,
+	item_order_number NUMBER,
+	auction_block_id INTEGER,
 	notes TEXT,
 	additional_information TEXT,
 	image_url VARCHAR(255),
 	PRIMARY KEY (id),
 	FOREIGN KEY (auction_id) REFERENCES Auction (id) ON DELETE CASCADE,
-	FOREIGN KEY (category_id) REFERENCES Category (id) ON DELETE SET NULL
+	FOREIGN KEY (category_id) REFERENCES Category (id) ON DELETE SET NULL,
+	FOREIGN KEY (auction_block_id) REFERENCES Auction_Block (id) ON DELETE SET NULL
 ) 
 ;
 
