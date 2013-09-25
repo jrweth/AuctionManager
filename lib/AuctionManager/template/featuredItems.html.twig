@@ -1,0 +1,23 @@
+{% extends "wp_layout.html.twig" %}
+
+{% block header %}
+
+<a class="brand" href="/" >
+    <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
+</a>
+
+{% endblock %}
+
+{% block content %}
+    <h1>{{ pageTitle }}</h1>
+    {% for item in items %}
+        <hr style="clear: both" />
+        <h3>{{ item.title }}</h3>
+        {% if item.image_url %}
+            <img src="{{ item.image_url }}" style="float:left; max-width: 200px; max-height: 200px; margin-right: 20px" />
+        {% endif %}
+        <div>{{ item.description }}</div>
+        {% if item.item_order_number %}<div><i>item order #</i>{{ item.item_order_number }}</div>{% endif %}
+        <div><i>donated by: </i><b>{{ item.donor_display_name }}</b></div>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "wp_layout.html.twig" %}
+
+{% block header %}
+
+<a class="brand" href="/" >
+    <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
+</a>
+
+{% endblock %}
+
+{% block content %}
+    <style>
+        #allItemsTable {
+            background-color: #666666;
+            font-color: #000000;
+        }
+        #allItemsTable tr {
+            border-top: 1px solid #333333;
+        }
+        #allItemsTable th, #allItemsTable td {
+            padding: 2px 5px;
+        }
+    </style>
+    <h1>{{ pageTitle }}</h1>
+    <table id="allItemsTable">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Order</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Image</th>
+                <th>Donor</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>#{{ item.item_order_number }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.category }}</td>
+                <td>
+                {% if item.image_url %}
+                    <img src="{{ item.image_url }}" style="float:left; max-width: 100px; max-height: 100px; margin-right: 20px" />
+                {% endif %}
+                </td>
+                <td>{{ item.donor_display_name }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block customJS %}
+<script>
+$( document ).ready(function() {
+    $('#allItemsTable').dataTable({
+        "sDom": "<fil>t",
+        "bPaginate": false,
+    });
+});
+</script>
+{% endblock %}

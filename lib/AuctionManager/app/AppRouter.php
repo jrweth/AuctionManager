@@ -70,6 +70,39 @@ class AppRouter
             ));
         });
         
+        $this->app->get('/featuredItems/:auction_group_id', function($auction_group_id) use ($container) {
+            $sql = 'select Item.title, Item.donor_display_name, Item.description, Item.image_url, Item.item_order_number
+                from Item join auction on item.auction_id = auction.id
+                where auction.is_default_auction = 1
+                and Item.featured_item = \'yes\'
+                and Item.public_display_item = \'yes\'
+                and auction.auction_group_id = ?';
+            $sth = $container['db']->query($sql);
+            $sth->execute(array(intval($auction_group_id)));
+            $items = $sth->fetchAll(\PDO::FETCH_CLASS);
+            echo $container['twig']->render('featuredItems.html.twig', array(
+                'pageTitle' => 'Featured Items',
+                'items' => $items
+            ));
+        });
+        
+        
+        $this->app->get('/allItems/:auction_group_id', function($auction_group_id) use ($container) {
+            $sql = 'select Item.title, Item.donor_display_name, Item.description, Item.image_url, Item.item_order_number, category.name as category_name
+            from Item join auction on item.auction_id = auction.id
+            left join category on item.category_id = category.id
+            where auction.is_default_auction = 1
+            and Item.public_display_item = \'yes\'
+            and auction.auction_group_id = ?';
+            $sth = $container['db']->query($sql);
+            $sth->execute(array(intval($auction_group_id)));
+            $items = $sth->fetchAll(\PDO::FETCH_CLASS);
+            echo $container['twig']->render('allItems.html.twig', array(
+                            'pageTitle' => 'All Items',
+                            'items' => $items
+            ));
+        });
+        
         $app->get("/logout", function () use ($app) {
            unset($_SESSION['user']);
             $app->redirect($app->container['config']['webRoot']);
