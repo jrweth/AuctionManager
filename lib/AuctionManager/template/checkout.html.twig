@@ -19,11 +19,10 @@
 </ul>
 <div class="tab-content">
   <div class="tab-pane active" id="step1">
-      <div id="scaffold-content"></div>
   </div>
   <div class="tab-pane" id="step2">
       <div><h1 class="bidderName">Bidder</h1></div>
-      <div>Balance: $<span class="bidderBalance"></span></div>
+      <div><h3>Balance: $<span class="bidderBalance"></span></h3></div>
       <div class="row">
           <div class="span4">
               <h2>Purchases</h2>
@@ -59,6 +58,7 @@
   </div>
 </div>
 
+      <div id="scaffold-content"></div>
 
 
 <div id="bidder-number-report">
@@ -150,6 +150,7 @@ var init = {
 		addNew: function() {
             $('#step1').removeClass('active');
             $('#step2').addClass('active');
+        	$('#scaffold-content').hide();
 			this.scaffold.router.navigate('model/' + this.modelName + '/insert', {trigger: true});
 		},
     });
@@ -213,6 +214,7 @@ var init = {
         edit: function () {
             $('#stepTab1, #step1').removeClass('active');
             $('#stepTab2, #step2').addClass('active');
+        	$('#scaffold-content').hide();
             var purchaseView = new $.bbscaffold.purchasesViewType({
                 scaffold: this.scaffold,
                 bidder_id: this.model.get('id'),
