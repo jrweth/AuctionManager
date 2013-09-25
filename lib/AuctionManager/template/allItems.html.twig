@@ -12,7 +12,6 @@
     <style>
         #allItemsTable {
             background-color: #666666;
-            font-color: #000000;
         }
         #allItemsTable tr {
             border-top: 1px solid #333333;
@@ -20,17 +19,25 @@
         #allItemsTable th, #allItemsTable td {
             padding: 2px 5px;
         }
+        #allItemsTable th {
+            white-space:nowrap;
+            color: #9999ff;
+            cursor: pointer;
+        }
+        #allItemsTable th:hover {
+            color: #3333ff;
+        }
     </style>
     <h1>{{ pageTitle }}</h1>
     <table id="allItemsTable">
         <thead>
             <tr>
-                <th>Title</th>
-                <th>Order</th>
-                <th>Description</th>
-                <th>Category</th>
+                <th>Title &#8593;&#8595;</th>
+                <th>Order &#8593;&#8595;</th>
+                <th>Description &#8593;&#8595;</th>
+                <th>Category &#8593;&#8595;</th>
                 <th>Image</th>
-                <th>Donor</th>
+                <th>Donor &#8593;&#8595;</th>
             </tr>
         </thead>
         <tbody>
@@ -39,7 +46,7 @@
                 <td>{{ item.title }}</td>
                 <td>#{{ item.item_order_number }}</td>
                 <td>{{ item.description }}</td>
-                <td>{{ item.category }}</td>
+                <td>{{ item.category_name }}</td>
                 <td>
                 {% if item.image_url %}
                     <img src="{{ item.image_url }}" style="float:left; max-width: 100px; max-height: 100px; margin-right: 20px" />
