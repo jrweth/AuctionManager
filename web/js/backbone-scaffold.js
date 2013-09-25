@@ -689,6 +689,28 @@
 				}));
 			}
 		}),
+		modelEditColumnDropdown: Backbone.View.extend({
+			initialize: function() {
+				this.scaffold = this.options.scaffold;
+				this.modelName = this.options.modelName;
+				this.columnName = this.options.columnName;
+				this.model = this.options.model;
+				
+				this.modelDef = this.scaffold.modelDefs[this.modelName];
+				this.columnDef = this.modelDef.columns[this.columnName];
+				this.template = _.template(this.scaffold.templates['modelEditColumnDropdown']);
+			},
+			render: function() {
+				this.$el.html(this.template({
+					label: this.columnDef.label,
+					columnName: this.columnName,
+					required: this.columnDef.required,
+					value: this.model.get(this.columnName),
+					options: this.columnDef.options,
+					emptyOption: this.columnDef.emptyOption
+				}));
+			}
+		}),
 		modelEditColumnCollectionDropdown: Backbone.View.extend({
 			initialize: function() {
 				this.scaffold = this.options.scaffold;
