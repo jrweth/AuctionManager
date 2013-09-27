@@ -99,7 +99,7 @@ function fnCreateSelect( aData, selected )
         selected = '';
     }
     aData.sort();
-    var r='<select><option value=""></option>';
+    var r='<select><option value="">All Categories...</option>';
     var iLen=aData.length;
     for (var i=0 ; i<iLen ; i++ )
     {
@@ -125,7 +125,7 @@ function fnCreateFilterContainer(id, label) {
     
     return '<div class="control-group" id="filterControlGroup_' + id + '"> \
         <label class="control-label" for="filter_' + id + '">' + label + '</label> \
-        <div class="controls" id="filterControl_' + id +'"></div> \
+        <span class="controls" id="filterControl_' + id +'"></span> \
     </div>';
 }
 
