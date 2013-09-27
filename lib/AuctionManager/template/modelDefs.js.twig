@@ -309,14 +309,20 @@ $.bbscaffoldModelDefs = {
         columns: {
             bidder_id: {
                 label: 'bidder',
+                required: true,
                 listDisplayView: 'modelColumnLookup',
-                editDisplayView: 'modelEditColumnCollectionDropdown',
-                emptyOption: 'Choose One...',
+                editDisplayView: 'modelEditColumnHidden',
                 relatedModelName: 'bidder'
             },
-            payment_type: {requiremed: true},
-            payment_date: {},
+            payment_type: {
+                required: true,
+                editDisplayView: 'modelEditColumnDropdown',
+                options: [{value: 'credit card', display: 'credit card'},{value: 'cash', display: 'cash'},{value: 'check', display: 'check'}]
+            },
             amount: {required: true},
+            payment_date: {
+                defaultValue: new Date().toLocaleDateString()
+            },
             notes: {
                 editDisplayTemplate: 'modelEditColumnTextArea'
             }
