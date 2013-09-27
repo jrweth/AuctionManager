@@ -51,7 +51,8 @@ class AppRouter
             echo $container['twig']->render('layout.html.twig');
         });
         
-        $this->app->get('/modelDefs.js', $authenticate($app), function() use($container) {
+        $this->app->get('/modelDefs.js', $authenticate($app), function() use($container, $app) {
+            $app->response()->headers()->offsetSet('Content-Type','application/javascript');
             echo $container['twig']->render('modelDefs.js.twig');
         });
         
