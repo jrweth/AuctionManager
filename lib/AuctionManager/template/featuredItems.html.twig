@@ -10,8 +10,14 @@
 
 {% block content %}
     <h1>{{ pageTitle }}</h1>
+    <div id="category_filter" style="float: left; padding-right:10px"></div>
+    <table id="featuredItemsTable">
+    <thead><tr style="display: none"><th>&#160</th><th>category</th></tr></thead>
+    
+    <tbody>
     {% for item in items %}
-        <hr style="clear: both" />
+        <tr><td>
+        <hr />
         <h3>{{ item.title }}</h3>
         {% if item.image_url %}
             <img src="{{ item.image_url }}" style="float:left; max-width: 200px; max-height: 200px; margin-right: 20px" />
@@ -19,5 +25,22 @@
         <div>{{ item.description }}</div>
         {% if item.item_order_number %}<div><i>item order #</i>{{ item.item_order_number }}</div>{% endif %}
         <div><i>donated by: </i><b>{{ item.donor_display_name }}</b></div>
+        </td><td>{{ item.category_name }}</tr>
     {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}
+
+{% block customJS %}
+<script>
+$( document ).ready(function() {
+    var dTable = $('#featuredItemsTable').dataTable({
+        "sDom": "<fil>t",
+        "bPaginate": false,
+    });
+    dTable.fnSetColumnVis( 1, false);
+    fnCreateFilter(dTable, 'category_filter', 1, {'name': 'Filter By Category:', 'filterType': 'select' });
+});
+
+</script>
 {% endblock %}

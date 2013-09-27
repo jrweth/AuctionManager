@@ -29,6 +29,7 @@
         }
     </style>
     <h1>{{ pageTitle }}</h1>
+    <div id="category_filter" style="float: left; padding-right:10px"></div>
     <table id="allItemsTable">
         <thead>
             <tr>
@@ -62,10 +63,13 @@
 {% block customJS %}
 <script>
 $( document ).ready(function() {
-    $('#allItemsTable').dataTable({
+    var dTable = $('#allItemsTable').dataTable({
         "sDom": "<fil>t",
         "bPaginate": false,
     });
+
+    fnCreateFilter(dTable, 'category_filter', 3, {'name': 'Filter By Category', 'filterType': 'select' });
 });
+
 </script>
 {% endblock %}
