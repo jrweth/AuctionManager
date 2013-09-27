@@ -71,8 +71,9 @@ class AppRouter
         });
         
         $this->app->get('/featuredItems/:auction_group_id', function($auction_group_id) use ($container) {
-            $sql = 'select Item.title, Item.donor_display_name, Item.description, Item.image_url, Item.item_order_number
+            $sql = 'select Item.title, Item.donor_display_name, Item.description, Item.image_url, Item.item_order_number, category.name as category_name
                 from Item join auction on item.auction_id = auction.id
+                left join category on item.category_id = category.id
                 where auction.is_default_auction = 1
                 and Item.featured_item = \'yes\'
                 and Item.public_display_item = \'yes\'
