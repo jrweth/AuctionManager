@@ -111,7 +111,12 @@ $.bbscaffoldModelDefs = {
     item: {
         label: 'Items',
         modelToString: function(model, modelDef, scaffold) {
-            return model.get('title');
+            if(model.get('item_order_number') != null) {
+                return '#' + model.get('item_order_number') + ' - ' + model.get('title');
+            }
+            else {
+                return model.get('title');
+            }
         },
         comparator: 'title',
         columns: {
