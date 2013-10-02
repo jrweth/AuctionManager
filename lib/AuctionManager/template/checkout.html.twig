@@ -5,9 +5,11 @@
     .bbs-modelHeader { display: none}
     td ul {list-style-type: none}
     .paymentTable th, .paymentTable td, .purchasesTable th, .purchasesTable td { padding: 5px;}
+    .paymentReceiptTable th:first-child, .paymentReceiptTable td:first-child { display: none; background-color: purple}
+
 </style>
-<h1>Checkout</h1>
-<ul class="nav nav-tabs" id="stepTabs">
+<h1 class="no-print">Checkout</h1>
+<ul class="nav nav-tabs no-print" id="stepTabs">
   <li id="stepTab1" class="active"><a data-target="#step1" >Step 1 - Find Bidder</a></li>
   <li id="stepTab2"><a data-target="#step2" >Step 2 - Confirm Purchases/Add Payments</a></li>
   <li id="stepTab3"><a data-target="#step3" >Step 3 - Print Receipt</a></li>
@@ -19,7 +21,14 @@
     </div>
   </div>
   <div class="tab-pane" id="step2">
-      <div><h1 class="bidderName">Bidder</h1></div>
+      <div>
+          <h1><div class="bidderName">Bidder</div>
+          <a class="btn btn-primary" onclick="
+              $('#stepTab1, #step1, #stepTab2, #step2').removeClass('active');
+              $('#stepTab3, #step3').addClass('active');
+              $('#scaffold-content').hide(); window.print();">print receipt</a>
+              </h1>
+      </div>
       <div><h3>Balance Due: <span class="bidderBalance"></span></h3></div>
       <div class="row">
           <div class="span4">
@@ -34,11 +43,11 @@
           <div class="span8">
               <h2>Purchases</h2>
               <table class="purchasesTable table-striped dataTable">
-                  <thead><th>item</th><th>amount</th></thead>
+                  <thead><th>item</th><th>valued at</th><th>amount</th></thead>
                   <tbody></tbody>
                   <tfoot>
-                      <tr><th>Total</th><th class="purchaseTotal">0</th></tr>
-                      <tr>
+                      <tr><th>&#160</th><th>Total</th><th class="purchaseTotal">0</th></tr>
+                  </tfoot>
               </table>
               <a class="addPurchase">add additional purchase</a>
               <div id="addItem" style="display: none">
@@ -52,7 +61,25 @@
       </div>
   </div>
   <div class="tab-pane" id="step3">
-      step 3
+      <h1 class="bidderName"></h1>
+      Thank you for attending the Philadelphia Relief Benefit Sale. We hope you had fun.
+      Please tell others about the event and come back next year. Here is a receipt for your purchases.
+      Visit the website at MCCPhillyFestival.org
+    <br />
+    Part of the PA Relief Sale
+      <h2>Purchases</h2>
+      <table class="purchasesTable table-striped dataTable">
+          <thead><th>item</th><th>valued at</th><th>amount</th></thead>
+          <tbody></tbody>
+          <tfoot>
+              <tr><th>&#160</th><th>Total</th><th class="purchaseTotal">0</th></tr>
+      </table>
+      <h2>Payments</h2>
+      <table class="paymentTable table-striped paymentReceiptTable dataTable">
+          <thead><tr><th>&#160;</th><th>date</th><th>type</th><th>notes</th><th>amount</th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><th>&#160</th><th colspan="2">&#160;</th><th>Total</th><th class="paymentTotal">0</th></tr></tfoot>
+      </table>
   </div>
 </div>
 
@@ -138,10 +165,10 @@ var init = {
 
     	},
     	render: function() {
-        	this.$el.find('.bidderName').html('Bidder ' + this.bidderInfo);
+        	$('.bidderName').html('Bidder ' + this.bidderInfo);
         	var purchaseTotal = 0.0;
 		    var oddEven = 'even';
-		    this.$el.find('.purchasesTable tbody').html('');
+		    $('.purchasesTable tbody').html('');
     		for (var i = 0; i < this.purchaseCollection.length; i++) {
     		    var purchase = this.purchaseCollection.at(i);
         		if(purchase.get('bidder_id') == this.bidder_id) {
@@ -149,22 +176,26 @@ var init = {
         		    var item = this.itemCollection.get(purchase.get('item_id'));
         		    var orderNumber = item.get('item_order_number');
         		    if (orderNumber == null) orderNumber = '';
-	    	        this.$el.find('.purchasesTable tbody').append('<tr class="' + oddEven + '"><td>#' + orderNumber + ' - ' + item.get('title') + '</td><td>$' + purchase.get('amount') + '</td></tr>');
+        		    var value = item.get('value');
+        		    if (value == null || value.length == 0) value = '[not assigned]';
+	    	        $('.purchasesTable tbody').append('<tr class="' + oddEven + '"><td>#' + orderNumber + ' - ' + item.get('title') + '</td> \
+	    	    	        <td>' + value + '</td> \
+	    	    	        <td>$' + purchase.get('amount') + '</td></tr>');
 	    	        purchaseTotal = purchaseTotal + parseFloat(purchase.get('amount'), 10);
         		}
 			}
-			this.$el.find('.purchaseTotal').html('$' + purchaseTotal);
+			$('.purchaseTotal').html('$' + purchaseTotal);
 
 			var paymentTotal = 0.0;
 			var notes;
-		    this.$el.find('.paymentTable tbody').html('');
+		    $('.paymentTable tbody').html('');
     		for (var i = 0; i < this.paymentCollection.length; i++) {
     		    var payment = this.paymentCollection.at(i);
         		if(payment.get('bidder_id') == this.bidder_id) {
             		if( oddEven == 'even') {oddEven = 'odd';} else {oddEven = 'even';}
             		notes = payment.get('notes');
             		if (notes == null) notes = '[none]';
-	    	        this.$el.find('.paymentTable tbody').append('<tr class="' + oddEven + '"> \
+	    	        $('.paymentTable tbody').append('<tr class="' + oddEven + '"> \
 	    	    	        <td><a class="deletePayment btn btn_small" data-payment_id="' + payment.get('id') +'">delete</a></td> \
 	    	    	        <td>' + payment.get('payment_date') + '</td> \
 	    	    	        <td>' + payment.get('payment_type') + '</td> \
@@ -173,8 +204,8 @@ var init = {
 	    	        paymentTotal = paymentTotal + parseFloat(payment.get('amount'), 10);
         		}
 			}
-			this.$el.find('.paymentTotal').html('$' + paymentTotal);
-			this.$el.find('.bidderBalance').html(purchaseTotal - paymentTotal);
+			$('.paymentTotal').html('$' + paymentTotal);
+			$('.bidderBalance').html(purchaseTotal - paymentTotal);
         },
     	events: {
     		'click .addPayment' : 'addPayment',
