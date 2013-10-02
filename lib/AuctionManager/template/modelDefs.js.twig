@@ -88,7 +88,7 @@ $.bbscaffoldModelDefs = {
             var contactModelDef = scaffold.modelDefs.contact;
             var contactModel = contactModelDef.backboneCollection.findWhere({id: model.get('contact_id')});
             return '#' + model.get('bidder_number')
-                + ' (' + contactModelDef.modelToString(contactModel, contactModelDef, scaffold) + ')';
+                + ' - ' + contactModelDef.modelToString(contactModel, contactModelDef, scaffold);
         },
         relatedModels: {
             contact: {
