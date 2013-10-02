@@ -26,3 +26,10 @@ ul.sortable li {
 .navbar .nav > li > a {
 	padding: 10px 7px 10px;;
 }
+@media print
+{    
+    .no-print, .no-print *
+    {
+        display: none !important;
+    }
+}
