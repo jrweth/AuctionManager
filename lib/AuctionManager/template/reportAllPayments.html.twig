@@ -1,0 +1,76 @@
+{% extends "layout.html.twig" %}
+
+
+
+{% block content %}
+    <h1>{{ pageTitle }}</h1>
+    <div id="payment_type_filter"></div>
+    <table id="reportTable" class="table table-striped">
+        <thead>
+            <tr>
+                {% for column in columns %}
+                <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in data %}
+            <tr>
+                {% for column in columns %}
+                <td>{{ row[column] }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+                <th></th>
+                <th></th>
+                <th>Total:</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+        </tfoot>
+    </table>
+{% endblock %}
+
+{% block customJS %}
+<script>
+$( document ).ready(function() {
+    var dTable = $('#reportTable').dataTable({
+        "sDom": "<filT>t",
+        "bPaginate": false,
+        "oTableTools": {
+            "sSwfPath": "{{ webRoot }}/TableTools/swf/copy_csv_xls_pdf.swf",
+            "aButtons": ["copy", "csv", "pdf"]
+        },
+        "fnFooterCallback": function ( nRow, aaData, iStart, iEnd, aiDisplay ) {
+            /*
+             * Calculate the total market share for all browsers in this table (ie inc. outside
+             * the pagination)
+             */
+            var iTotalAmount = 0;
+            for ( var i=0 ; i<aaData.length ; i++ )
+            {
+            	iTotalAmount += aaData[i][3]*1;
+            }
+             
+            /* Calculate the market share for browsers on this page */
+            var iPageAmount = 0;
+            for ( var i=iStart ; i<iEnd ; i++ )
+            {
+                iPageAmount += aaData[ aiDisplay[i] ][3]*1;
+            }
+             
+            /* Modify the footer row to match what we want */
+            var nCells = nRow.getElementsByTagName('th');
+            nCells[3].innerHTML = iPageAmount;
+             //   '% ('+ parseInt(iTotalMarket * 100)/100 +'% total)';
+        }
+    });
+
+    fnCreateFilter(dTable, 'payment_type_filter', 2, {'name': 'Filter By Payment Type', 'filterType': 'select' });
+});
+
+</script>
+{% endblock %}

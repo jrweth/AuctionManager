@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% block head %}
+            <title>Auction Manager {% block title %}{{ pageTitle }}{% endblock %}</title>
+        {% endblock %}
+        
+        <meta http-equiv="refresh" content="10" >
+    </head>
+    <body style="text-align: center">
+    
+            <a class="brand" href="/" >
+                <img alt="MCC Philly Festival Logo" src="http://www.mccphillyfestival.org/wp-content/uploads/mcc-philly-festival-logo.png?9d7bd4">
+            </a>
+            <h1>Total Amount Raised: <span style="color: red">${{ totalPurchases }}</span></h1>
+            <h1>Last Item Sold</h1>
+            <h1 style="color: red">#{{ items[0].item_order_number}} - {{ items[0].title }}</h1>
+            <h3>Upcoming Items</h3>
+            {%  for key, item in items %}
+                {% if key >0 and key < 7 %}<h3>#{{ item.item_order_number}} - {{ item.title }}</h4>{% endif %}
+            {% endfor %}
+            <span><i>Note: depending on how fast items are being recorded, this screen might not be up to date</i></span>
+    </body>
+</html>

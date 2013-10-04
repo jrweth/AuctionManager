@@ -1,0 +1,47 @@
+{% extends "layout.html.twig" %}
+
+
+
+{% block content %}
+    <h1>{{ pageTitle }}</h1>
+    <table id="reportTable" class="table table-striped">
+        <thead>
+            <tr>
+                {% for column in columns %}
+                <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in data %}
+            <tr>
+                {% for column in columns %}
+                <td>{{ row[column] }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            {%  for column in columns %}
+                <th></th>
+            {% endfor %}
+        </tfoot>
+    </table>
+{% endblock %}
+
+{% block customJS %}
+<script>
+$( document ).ready(function() {
+    var dTable = $('#reportTable').dataTable({
+        "sDom": "<filT>t",
+        "bPaginate": false,
+        "oTableTools": {
+            "sSwfPath": "{{ webRoot }}/TableTools/swf/copy_csv_xls_pdf.swf",
+            "aButtons": ["copy", "csv", "pdf"]
+        },
+    });
+
+});
+
+</script>
+{% endblock %}
