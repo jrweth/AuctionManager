@@ -105,6 +105,145 @@ class AppRouter
             ));
         });
         
+        //REports
+        $this->app->get('/reports/paymentMismatches', $authenticate($app), function() use($container) {
+            $sql = 'select contact.last_name, contact.middle_name, contact.first_name, bidder.id, bidder_number, purchase_total, payment_total
+                from bidder
+                join contact on bidder.contact_id = contact.id
+                left join (
+                    SELECT bidder_id, sum(amount) purchase_total
+                    FROM "Purchase"
+                    group by bidder_id) purchases on bidder.id = purchases.bidder_id
+                left join (
+                    SELECT bidder_id, sum(amount) payment_total
+                    FROM "Payment"
+                    group by bidder_id) payments on bidder.id = payments.bidder_id
+                where (
+                    purchase_total <> payment_total
+                    or purchase_total is null and payment_total is not null
+                    or purchase_total is not null and payment_total is null
+                )
+                    and bidder.auction_id = '. $_SESSION['auctionId'];
+            $sth = $container['db']->query($sql);
+            $sth->execute();
+            $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            foreach($data as $key=>$row) {
+                $data[$key]['amount_owed'] = floatval($row['purchase_total']) - floatval($row['payment_total']);
+            }
+            //exit();
+            echo $container['twig']->render('report.html.twig', array(
+                            'pageTitle' => 'Purchase/Payment Mismatches',
+                            'data' => $data,
+                            'columns' => array('last_name', 'first_name', 'middle_name', 'bidder_number', 'purchase_total', 'payment_total', 'amount_owed')
+            ));
+        });
+        
+        
+        $this->app->get('/reports/noPayment', $authenticate($app), function() use($container) {
+            $sql = 'select contact.last_name, contact.middle_name, contact.first_name, bidder.id, bidder_number, purchase_total, payment_total
+            from bidder
+            join contact on bidder.contact_id = contact.id
+            left join (
+                SELECT bidder_id, sum(amount) purchase_total
+                FROM "Purchase"
+                group by bidder_id) purchases on bidder.id = purchases.bidder_id
+            left join (
+                SELECT bidder_id, sum(amount) payment_total
+                FROM "Payment"
+                group by bidder_id) payments on bidder.id = payments.bidder_id
+            where purchase_total is not null and payment_total is null
+                and bidder.auction_id = '. $_SESSION['auctionId'];
+            $sth = $container['db']->query($sql);
+            $sth->execute();
+            $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            foreach($data as $key=>$row) {
+                $data[$key]['amount_owed'] = floatval($row['purchase_total']) - floatval($row['payment_total']);
+            }
+            //exit();
+            echo $container['twig']->render('report.html.twig', array(
+                            'pageTitle' => 'Bidders who haven\'t paid',
+                            'data' => $data,
+                            'columns' => array('last_name', 'first_name', 'middle_name', 'bidder_number', 'purchase_total', 'payment_total', 'amount_owed')
+            ));
+        });
+        
+        $this->app->get('/reports/allPayments', $authenticate($app), function() use($container) {
+            $sql = "select ifnull(contact.last_name,'') || ', ' || ifnull(contact.first_name, '') || ' ' || ifnull(contact.middle_name,'') as name,
+                    bidder_number, payment_type, payment.amount, payment_date,
+                    ifnull(bidder_payment_total,0) bidder_payment_total,
+                    ifnull(bidder_purchase_total,0) bidder_purchase_total
+                from payment
+                join bidder on payment.bidder_id = bidder.id
+                join contact on bidder.contact_id = contact.id
+                left join (
+                    SELECT bidder_id, sum(amount) bidder_purchase_total
+                    FROM Purchase
+                    group by bidder_id) purchases on bidder.id = purchases.bidder_id
+                left join (
+                    SELECT bidder_id, sum(amount) bidder_payment_total
+                    FROM Payment
+                    group by bidder_id) payments on bidder.id = payments.bidder_id
+                where bidder.auction_id = ". $_SESSION['auctionId'];
+            $sth = $container['db']->query($sql);
+            $sth->execute();
+            $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            echo $container['twig']->render('reportAllPayments.html.twig', array(
+                            'pageTitle' => 'All Payments',
+                            'data' => $data,
+                            'columns' => array('name', 'bidder_number', 'payment_type', 'amount', 'payment_date', 'bidder_payment_total', 'bidder_purchase_total')
+            ));
+        });
+        
+        $this->app->get('/statusUpdate/:auction_group_id', function($auction_group_id) use ($container) {
+            
+            //get the last purchase from the live auction
+            $sql = 'select max(purchase.id)
+            from purchase
+            join item on purchase.item_id = item.id
+            join auction on item.auction_id = auction.id
+            join auction_block on item.auction_block_id = auction_block.id
+            where auction_block.name = \'Live Auction\'
+            and item.item_order_number is not null
+            and auction.is_default_auction = 1
+            and auction.auction_group_id = ?';
+            
+            $stmt = $container['db']->query($sql);
+            $stmt->execute(array(intval($auction_group_id)));
+            $last_purchase_id = $stmt->fetchColumn();
+            $sql = 'select * 
+            from Item
+            join auction_block on item.auction_block_id = auction_block.id
+            where
+                auction_block.name = \'Live Auction\'
+                and item_order_number >= (
+                    select item_order_number from item
+                    join purchase on item.id = purchase.item_id
+                    where purchase.id = ' . $last_purchase_id .') 
+            order by item_order_number';
+            
+            $stmt2 = $container['db']->query($sql);
+            $stmt2->execute();
+            $items = $stmt2->fetchAll(\PDO::FETCH_CLASS);
+            
+            //get the total amount raised
+            $sql = 'select sum(purchase.amount) total_amount_raised
+            from purchase
+            join item on purchase.item_id = item.id
+            join auction on item.auction_id = auction.id
+            where auction.is_default_auction = 1
+            and auction.auction_group_id = ?';
+          
+            $stmt = $container['db']->query($sql);
+            $stmt->execute(array(intval($auction_group_id)));
+            $totalPurchases = $stmt->fetchColumn();
+            
+            echo $container['twig']->render('statusUpdate.html.twig', array(
+                            'pageTitle' => 'Status Update',
+                            'items' => $items,
+                            'totalPurchases' => $totalPurchases
+            ));
+        });
+        
         $app->get("/logout", function () use ($app) {
            unset($_SESSION['user']);
             $app->redirect($app->container['config']['webRoot']);
