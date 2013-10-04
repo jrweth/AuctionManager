@@ -99,7 +99,7 @@ function fnCreateSelect( aData, selected )
         selected = '';
     }
     aData.sort();
-    var r='<select><option value="">All Categories...</option>';
+    var r='<select><option value="">All...</option>';
     var iLen=aData.length;
     for (var i=0 ; i<iLen ; i++ )
     {
