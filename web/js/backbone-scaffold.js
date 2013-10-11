@@ -616,7 +616,7 @@
 							scaffold: this.scaffold,
 							modelName: this.modelName,
 							columnName: colName,
-							model: this.model,
+							model: this.model
 						});
 						
 						columnView.render();
@@ -1236,8 +1236,8 @@
 				this.relatedModels = this.relatedCollection.where(whereDef);
 				
 			}
-		}),
-	}
+		})
+	};
 	BackboneScaffold.prototype.defaults.router = Backbone.Router.extend({
 		routes: {
 			'' : 'viewDefault',
