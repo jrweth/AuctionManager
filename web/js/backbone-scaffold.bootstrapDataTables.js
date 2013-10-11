@@ -1,6 +1,7 @@
 $.bbscaffoldBootstrapDataTablesTemplates = {
     scaffold: '<div class="bbs-scaffold"> \
             <ul class="bbs-modelMenu nav navbar-nav" style="display: none"></ul></div> \
+    	<div class="bbs-loading">Loading...</div>\
         <div class="bbs-models" style="clear:both"    ></div> \
      </div>',
     modelListTableActions: '<td><button class="bbs-edit btn">edit</button></td> \

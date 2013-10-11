@@ -211,7 +211,7 @@
 		//make sure that the list section is displayed
 		$list.siblings().hide();
 		$list.show();
-		
+		$('.bbs-loading').hide(100);
 		//hide all the other modelDefs
 		this.$scaffold.find('.bbs-model').hide(100);
 		
@@ -359,7 +359,11 @@
 	
 	
 	BackboneScaffold.prototype.defaults.templates = {
-		scaffold: '<div class="bbs-scaffold"><nav class="bbs-modelMenu"></nav><div class="bbs-models"></div>',
+		scaffold: '<div class="bbs-scaffold">\
+			<nav class="bbs-modelMenu"></nav>\
+			<div class="bbs-loading">Loading...</div>\
+			<div class="bbs-models"></div>\
+		</div>',
 		modelMenu: '<div></div>',
 		modelMenuItem: '<li class="bbs-modelMenuItem"><a href="#/<%= name %>"><%- label %></a></li>',
 		model: '<div class="bbs-model bbs-model-<%- name %>" style="display: none"> \
