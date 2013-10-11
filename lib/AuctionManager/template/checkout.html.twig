@@ -220,7 +220,7 @@ var init = {
     			urlRoot: this.scaffold.options.apiRoot + '/payment',
     			modelName: 'payment',
     			columns: this.scaffold.modelDefs.payment.columns,
-    			defaults: {bidder_id: this.bidder_id, payment_date: new Date().toLocaleDateString()}
+    			defaults: {bidder_id: this.bidder_id, payment_date: bbsCurrentDateFormat}
     		});
     		//navigate to the insert screen
     		this.scaffold.router.insertModel('payment');
