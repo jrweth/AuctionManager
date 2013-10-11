@@ -43,13 +43,13 @@
           <div class="span8">
               <h2>Purchases</h2>
               <table class="purchasesTable table-striped dataTable">
-                  <thead><th>item</th><th>valued at</th><th>amount</th></thead>
+                  <thead><th>&#160;</th><th>item</th><th>valued at</th><th>amount</th></thead>
                   <tbody></tbody>
                   <tfoot>
-                      <tr><th>&#160</th><th>Total</th><th class="purchaseTotal">0</th></tr>
+                      <tr><th>&#160;</th><th>&#160</th><th>Total</th><th class="purchaseTotal">0</th></tr>
                   </tfoot>
               </table>
-              <a class="addPurchase">add additional purchase</a>
+              <a class="btn btn-primary addPurchase">Add Additional Purchase</a>
               <div id="addItem" style="display: none">
                   <div>
                   <select><option value="">choose item..</option></select>
@@ -69,7 +69,7 @@
     Part of the PA Relief Sale
       <h2>Purchases</h2>
       <table class="purchasesTable table-striped dataTable">
-          <thead><th>item</th><th>valued at</th><th>amount</th></thead>
+          <thead><th>&#160;</th><th>item</th><th>valued at</th><th>amount</th></thead>
           <tbody></tbody>
           <tfoot>
               <tr><th>&#160</th><th>Total</th><th class="purchaseTotal">0</th></tr>
@@ -178,7 +178,9 @@ var init = {
         		    if (orderNumber == null) orderNumber = '';
         		    var value = item.get('value');
         		    if (value == null || value.length == 0) value = '[not assigned]';
-	    	        $('.purchasesTable tbody').append('<tr class="' + oddEven + '"><td>#' + orderNumber + ' - ' + item.get('title') + '</td> \
+	    	        $('.purchasesTable tbody').append('<tr class="' + oddEven + '"> \
+	    	    	        <td><a class="deletePurchase btn btn_small" data-purchase_id="' + purchase.get('id') +'">delete</a></td> \
+	    	    	        <td>#' + orderNumber + ' - ' + item.get('title') + '</td> \
 	    	    	        <td>' + value + '</td> \
 	    	    	        <td>$' + purchase.get('amount') + '</td></tr>');
 	    	        purchaseTotal = purchaseTotal + parseFloat(purchase.get('amount'), 10);
@@ -210,7 +212,8 @@ var init = {
     	events: {
     		'click .addPayment' : 'addPayment',
     		'click .addPurchase' : 'addPurchase',
-    		'click .deletePayment' : 'deletePayment'
+    		'click .deletePayment' : 'deletePayment',
+    		'click .deletePurchase' : 'deletePurchase',
     	},
     	addPayment: function() {
     		this.scaffold.debugLog('Add New Payment');
@@ -244,9 +247,25 @@ var init = {
     	    if(confirm('Are you certain you want to delete this payment?')) {
         	    var id = $(event.target).attr('data-payment_id');
         	    var payment = this.paymentCollection.get(id);
-        	    payment.destroy();
+        	    payment.destroy({
+        	        wait: true,
+        	        success: function () {$.bbscaffold.purchasesView.render();},
+        	        error: function() {alert('There was an error deleting the payment');}
+               });
             }
     	    $.bbscaffold.purchasesView.render();
+        },
+    	deletePurchase: function(event) {
+    	    if(confirm('Are you certain you want to delete this purchase?')) {
+        	    var id = $(event.target).attr('data-purchase_id');
+        	    var purchase = this.purchaseCollection.get(id);
+        	    purchase.destroy({
+        	        wait: true,
+        	        success: function () {$.bbscaffold.purchasesView.render();},
+        	        error: function() {alert('There was an error deleting the purchase');}
+               });
+            }
+    	    
         }
     });
 
