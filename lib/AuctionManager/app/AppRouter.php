@@ -61,7 +61,7 @@ class AppRouter
         });
         
 
-        $this->app->get('/register', function() use($container) {
+        $this->app->get('/register', $authenticate($app), function() use($container) {
             echo $container['twig']->render('register.html.twig');
         });
        
