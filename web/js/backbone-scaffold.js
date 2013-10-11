@@ -359,7 +359,7 @@
 		model: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName); },
 		modelList: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName + ' .bbs-modelList'); },
 		modelListTable: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName + ' .bbs-modelListTable'); },
-		modelEdit: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName + ' .bbs-modelEdit'); },
+		modelEdit: function($scaffold, modelName) { return $scaffold.find('.bbs-model-' + modelName + ' .bbs-modelEdit'); }
 	};
 	
 	
