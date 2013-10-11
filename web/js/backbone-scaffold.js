@@ -186,7 +186,12 @@
 		
 	BackboneScaffold.prototype.displayModel = function(modelName) {
 		this.debugLog('displaying model: ' + modelName);
-		
+		if(this.modelDefs[modelName].displayInitializationStatus != 'initialized') {
+			$('.bbs-loading').show();
+		}
+		else {
+			$('.bbs-loading').hide();
+		}
 		var reDisplayModel = function(scaffold, modelName) {
 			return function() {
 				scaffold.displayModel(modelName);
