@@ -1,3 +1,7 @@
+var bbsCurrentDate = new Date();
+var bbsCurrentMonth = bbsCurrentDate.getMonth() + 1; //Months are zero based
+var bbsDateFormat = bbsCurrentMonth + '/' + bbsCurrentDate.getDate() + '/' + bbsCurrentDate.getFullYear();
+
 $.bbscaffoldModelDefs = {
     contact: {
         label: 'Contacts',
@@ -326,7 +330,7 @@ $.bbscaffoldModelDefs = {
             },
             amount: {required: true},
             payment_date: {
-                defaultValue: new Date().toLocaleDateString()
+                defaultValue: bbsDateFormat
             },
             notes: {
                 editDisplayTemplate: 'modelEditColumnTextArea'
