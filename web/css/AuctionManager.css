@@ -26,6 +26,7 @@ ul.sortable li {
 .navbar .nav > li > a {
 	padding: 10px 7px 10px;;
 }
+.bbs-loading{ font-size: 20px; color: grey}
 @media print
 {    
     .no-print, .no-print *
