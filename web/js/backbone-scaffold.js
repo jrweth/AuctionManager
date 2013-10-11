@@ -513,7 +513,7 @@
             },
             events: {
               'click .bbs-edit' : 'edit',
-              'click .bbs-delete' : 'delete'
+              'click .bbs-delete' : 'deleteModel'
             },
             render: function() {
                 //add the action cell
@@ -554,7 +554,7 @@
             edit: function () {
                 this.scaffold.router.navigate('model/' + this.modelName + '/edit/' + this.model.get('id'), {trigger: true});
             },
-            delete: function() {
+            deleteModel: function() {
                 if(confirm('Are you sure you want to delete this record?')) {
                     this.scaffold.debugLog('deleting ' + this.modelName);
                     this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
@@ -1053,7 +1053,7 @@
                 this.model.on('destroy', this.remove, this); 
             },
             events: {
-                'click a.bbs-delete' : 'delete'
+                'click a.bbs-delete' : 'deleteModel'
             },
             render: function () {
                 var toStringValue = this.scaffold.modelDefs[this.modelName].modelToString(this.model, this.modelName, this.scaffold);
@@ -1061,7 +1061,7 @@
                 this.$el.html(toStringValue + ' ' + template({relatedModelName: this.scaffold.modelDefs[this.modelName].label}));
                 return this;
             },
-            delete: function() {
+            deleteModel: function() {
                 this.scaffold.debugLog('deleting ' + this.modelName);
                 this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
             }
@@ -1077,7 +1077,7 @@
                 this.model.on('destroy', this.remove, this); 
             },
             events: {
-                'click a.bbs-delete' : 'delete'
+                'click a.bbs-delete' : 'deleteModel'
             },
             render: function () {
                 var handleTemplate = _.template(this.scaffold.templates.sortableHandle);
@@ -1090,7 +1090,7 @@
                 );
                 return this;
             },
-            delete: function() {
+            deleteModel: function() {
                 this.scaffold.debugLog('deleting ' + this.modelName);
                 this.model.destroy({wait: true, error: function(response) {alert('There was an error deleting the record');}});
             }
