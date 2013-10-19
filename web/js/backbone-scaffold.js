@@ -243,23 +243,29 @@
             }
         };
         
-        //check to see if related model are already instantiaed, if not instantiate and then come back and initialize this one
-        for(var relatedModelName in this.modelDefs[modelName].relatedModels) {
-            //related model not yet instantiated - instantiate now and come back later
-            if(this.modelDefs[relatedModelName].collectionInitializationStatus == 'not initialized') {
-                this.initModel(relatedModelName, startingModelName);
-            }
-        }
         
         //if this is the starting model, make sure all other collections are initialized before proceeding
+        
         if(modelName == startingModelName) {
-            for(var otherModelName in this.modelDefs) {
-                //related model not yet instantiated - instantiate now and come back later
-                if(otherModelName != modelName && this.modelDefs[otherModelName].collectionInitializationStatus == 'initializing') {
-                    console.log("related collection not initialized so starting over");
-                    setTimeout(reInitModel(this, modelName, startingModelName), 250);
-                    return false;
+        	var relatedCollectionsInitialized = true;
+        	var relatedModelName = '';
+            for(var relatedModelIndex in this.modelDefs[modelName].requiredModelsForDisplay) {
+            	relatedModelName = this.modelDefs[modelName].requiredModelsForDisplay[relatedModelIndex];
+            	//related model not yet instantiated - instantiate now and come back later
+                if(this.modelDefs[relatedModelName].collectionInitializationStatus == 'not initialized') {
+                    this.initModel(relatedModelName, startingModelName);
+                    relatedCollectionsInitialized = false;
                 }
+                //related not yet finished initializing
+                else if(this.modelDefs[relatedModelName].collectionInitializationStatus != 'initialized') {
+                	this.debugLog(relatedModelName + 'initializeation status = ' + this.modelDefs[relatedModelName].collectionInitializationStatus)
+                    relatedCollectionsInitialized = false;
+                }
+            }
+            if(relatedCollectionsInitialized == false) {
+            	this.debugLog("related collection not initialized so starting over");
+            	setTimeout(reInitModel(this, modelName, startingModelName), 250);
+            	return false;
             }
         }
         
