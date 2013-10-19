@@ -12,6 +12,7 @@ CREATE TABLE Item
 	auction_id INTEGER NOT NULL,
 	title INTEGER NOT NULL,
 	donor_display_name VARCHAR(255) NOT NULL,
+	description_for_booklet TEXT,
 	description TEXT,
 	date_received DATE,
 	category_id INTEGER,
