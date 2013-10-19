@@ -5,7 +5,10 @@
     .bbs-modelHeader { display: none}
     td ul {list-style-type: none}
     .paymentTable th, .paymentTable td, .purchasesTable th, .purchasesTable td { padding: 5px;}
-    .paymentReceiptTable th:first-child, .paymentReceiptTable td:first-child { display: none; background-color: purple}
+    .paymentReceiptTable th:first-child { display: none; background-color: purple}
+    .paymentReceiptTable td:first-child { display: none; background-color: purple}
+    .purchaseReceiptTable th:first-child { display: none; background-color: purple}
+    .purchaseReceiptTable td:first-child { display: none; background-color: purple}
 
 </style>
 <h1 class="no-print">Checkout</h1>
@@ -68,8 +71,8 @@
     <br />
     Part of the PA Relief Sale
       <h2>Purchases</h2>
-      <table class="purchasesTable table-striped dataTable">
-          <thead><th>&#160;</th><th>item</th><th>valued at</th><th>amount</th></thead>
+      <table class="purchasesTable table-striped purchaseReceiptTable dataTable">
+          <thead><th>&#160;</th><th>item</th><th>amount</th></thead>
           <tbody></tbody>
           <tfoot>
               <tr><th>&#160</th><th>Total</th><th class="purchaseTotal">0</th></tr>
@@ -176,12 +179,9 @@ var init = {
         		    var item = this.itemCollection.get(purchase.get('item_id'));
         		    var orderNumber = item.get('item_order_number');
         		    if (orderNumber == null) orderNumber = '';
-        		    var value = item.get('value');
-        		    if (value == null || value.length == 0) value = '[not assigned]';
 	    	        $('.purchasesTable tbody').append('<tr class="' + oddEven + '"> \
 	    	    	        <td><a class="deletePurchase btn btn_small" data-purchase_id="' + purchase.get('id') +'">delete</a></td> \
 	    	    	        <td>#' + orderNumber + ' - ' + item.get('title') + '</td> \
-	    	    	        <td>' + value + '</td> \
 	    	    	        <td>$' + purchase.get('amount') + '</td></tr>');
 	    	        purchaseTotal = purchaseTotal + parseFloat(purchase.get('amount'), 10);
         		}
