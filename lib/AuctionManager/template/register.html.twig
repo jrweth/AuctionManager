@@ -27,6 +27,7 @@
 {% endblock %}
 
 {% block customJS %}
+<script src="{{ webroot }}modelDefs.js" type="text/javascript"></script>
 <script type="text/javascript">
 var init = {
         options: {
@@ -65,119 +66,7 @@ var init = {
          modelEditRemoveRelated: '<a class="bbs-delete btn btn-mini" style="cursor: pointer">remove</a>',
          modelEditAddRelated: '<a class="bbs-addRelated btn btn-mini" style="cursor: pointer">add</a>'
         },
-        modelDefs: {
-            contact: {
-                label: 'Contacts',
-                columns: {
-                    bidder_number: {
-                        label: 'bidder number',
-                        listDisplayView: 'modelColumnHasManyModelToString',
-                        editDisplayView: 'none',
-                        relatedModelKey: 'bidder'
-                    },
-                    first_name: {},
-                    middle_name: {},
-                    last_name: {},
-                    drivers_license: {},
-                    spouse_name: {},
-                    organization_name: {},
-                    affiliation_id: {
-                        label: 'affiliation',
-                        listDisplayView: 'modelColumnLookup',
-                        editDisplayView: 'modelEditColumnCollectionDropdown',
-                        emptyOption: 'Choose One...',
-                        relatedModelName: 'affiliation'
-                    },
-                    auction_group_id: {
-                        listDisplayView: 'none',
-                        editDisplayView: 'modelEditColumnHidden',
-                        defaultValue: '{{ auctionGroupId }}'
-                    },
-                    email: {},
-                    phone: {},
-                    street1: {},
-                    street2: {},
-                    city: {},
-                    state: {},
-                    zip: {},
-                    notes: {
-                        editDisplayTemplate: 'modelEditColumnTextArea'
-                    }
-                },
-                modelToString: function(model, modelDef, scaffold) {
-                    return model.get('first_name') + ' ' + model.get('last_name');
-                },
-                relatedModels: {
-                    affiliation: {
-                        joinColumn: 'affiliation_id',
-                        relatedJoinColumn: 'id',
-                        relatedModelName: 'affiliation'
-                    },
-                    bidder: {
-                        joinColumn: 'id',
-                        relatedJoinColumn: 'contact_id',
-                        relatedModelName: 'bidder'
-                    }
-                }
-            },
-            affiliation: {
-                label: 'Affiliations',
-                comparator: 'name',
-                columns: {
-                    name: {},
-                    auction_group_id: {
-                        listDisplayView: 'none',
-                        editDisplayView: 'modelEditColumnHidden',
-                        defaultValue: '{{ auctionGroupId }}'
-                    },
-                    contact_id: {
-                        label: 'affiliation contact',
-                        listDisplayView: 'modelColumnLookup',
-                        editDisplayView: 'modelEditColumnCollectionDropdown',
-                        emptyOption: 'Choose One...',
-                        relatedModelName: 'contact'
-                    },
-                },
-                modelToString: function(model, modelDef, scaffold) {
-                    return model.get('name');
-                },
-                relatedModels: {
-                    contact: {
-                        joinColumn: 'contact_id',
-                        relatedJoinColumn: 'id',
-                        relatedModelName: 'contact'
-                    }
-                }
-            },
-            bidder: {
-                label: 'Bidder',
-                columns: {
-                    bidder_number: {},
-                    auction_id: {
-                        listDisplayView: 'none',
-                        editDisplayView: 'modelEditColumnHidden',
-                        defaultValue: '{{ auctionId }}'
-                    },
-                    contact_id: {
-                        label: 'affiliation',
-                        listDisplayView: 'modelColumnLookup',
-                        editDisplayView: 'modelEditColumnCollectionDropdown',
-                        emptyOption: 'Choose One...',
-                        relatedModelName: 'contact'
-                    }
-                },
-                modelToString: function(model, modelDef, scaffold) {
-                    return model.get('bidder_number');
-                },
-                relatedModels: {
-                    contact: {
-                        joinColumn: 'contact_id',
-                        relatedJoinColumn: 'id',
-                        relatedModelName: 'contact'
-                    }
-                }
-            }
-        }
+        modelDefs: $.bbscaffoldModelDefs
     };
     $.extend( true, $.fn.DataTable.TableTools.classes, {
         "container": "btn-group",
