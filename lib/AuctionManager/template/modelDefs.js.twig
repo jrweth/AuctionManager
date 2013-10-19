@@ -6,6 +6,7 @@ $.bbscaffoldModelDefs = {
     contact: {
         label: 'Contacts',
         comparator: 'first_name',
+        requiredModelsForDisplay: ['item_contact', 'affiliation', 'bidder', 'item'],
         columns: {
             first_name: {},
             middle_name: {},
@@ -73,6 +74,7 @@ $.bbscaffoldModelDefs = {
     },
     bidder: {
         label: 'Bidder',
+        requiredModelsForDisplay: ['contact', 'purchase', 'payment', 'item'],
         columns: {
             bidder_number: {},
             auction_id: {
@@ -122,7 +124,8 @@ $.bbscaffoldModelDefs = {
                 return model.get('title');
             }
         },
-        comparator: 'title',
+        comparator: 'item_order_number',
+        requiredModelsForDisplay: ['contact', 'item_contact', 'category', 'auction_block'],
         columns: {
             auction_id: {
                 listDisplayView: 'none',
@@ -141,6 +144,9 @@ $.bbscaffoldModelDefs = {
                 linkedModelKey: 'contact'
             },
             description: {
+                editDisplayTemplate: 'modelEditColumnTextArea'
+            },
+            description_for_booklet: {
                 editDisplayTemplate: 'modelEditColumnTextArea'
             },
             category_id: {
@@ -212,6 +218,7 @@ $.bbscaffoldModelDefs = {
             auction_block_order: {},
         },
         comparator: 'auction_block_order',
+        requiredModelsForDisplay: [],
         modelToString: function(model, modelDef, scaffold) {
             return model.get('name');
         }
@@ -219,6 +226,7 @@ $.bbscaffoldModelDefs = {
     item_contact: {
         label: 'Donors',
         showInMenu: false,
+        requiredModelsForDisplay: ['contact', 'item'],
         modelToString: function(model, modelDef, scaffold) {
             var contactModelDef = scaffold.modelDefs.contact;
             var contactModel = contactModelDef.backboneCollection.findWhere({id: model.get('contact_id')});
@@ -271,6 +279,7 @@ $.bbscaffoldModelDefs = {
                 + ' - $' + model.get('amount');
         },
         comparator: 'id',
+        requiredModelsForDisplay: ['item', 'bidder', 'contact'],
         columns: {
             bidder_id: {
                 label: 'bidder',
@@ -315,6 +324,7 @@ $.bbscaffoldModelDefs = {
                 + ' (' + model.get('payment_type') + ')';
         },
         comparator: 'id',
+        requiredModelsForDisplay: ['bidder', 'contact'],
         columns: {
             bidder_id: {
                 label: 'bidder',
@@ -346,6 +356,7 @@ $.bbscaffoldModelDefs = {
     },
     category: {
         label: 'Categories',
+        requiredModelsForDisplay: [],
         columns: {
             name: {required: true},
             auction_group_id: {
@@ -360,6 +371,7 @@ $.bbscaffoldModelDefs = {
     },
     affiliation: {
         label: 'Affiliations',
+        requiredModelsForDisplay: ['contact'],
         columns: {
             name: {required: true},
             auction_group_id: {
