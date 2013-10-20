@@ -412,7 +412,7 @@
             %></ul></td>',
         //edit templates
         modelEditColumnText: '<label><%- label %><% if (required) { %> * <% } %></label> \
-                        <div><input class="bbs-editInputText" name="<%= columnName %>" value="<%= value %>" /></div>',
+                        <div><input class="bbs-editInputText" name="<%= columnName %>" value="<%- value %>" /></div>',
         modelEditColumnTextArea: '<label><%- label %></label> \
             <div><textarea class="bbs-editInputTextArea" name="<%= columnName %>"><%= value %></textarea></div>',
         modelEditColumnDropdown: '<label><%- label %><% if (required) { %> * <% } %></label> \
