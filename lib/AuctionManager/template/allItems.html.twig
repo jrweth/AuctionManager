@@ -45,12 +45,14 @@
         {% for item in items %}
             <tr>
                 <td>{{ item.title }}</td>
-                <td>#{{ item.item_order_number }}</td>
+                <td>{{ item.item_order_number }}</td>
                 <td>{{ item.description }}</td>
                 <td>{{ item.category_name }}</td>
                 <td>
                 {% if item.image_url %}
-                    <img src="{{ item.image_url }}" style="float:left; max-width: 100px; max-height: 100px; margin-right: 20px" />
+                    <a href="{{ item.image_url }}">
+                        <img src="{{ item.image_url }}" style="float:left; max-width: 100px; max-height: 100px; margin-right: 20px" />
+                    </a>
                 {% endif %}
                 </td>
                 <td>{{ item.donor_display_name }}</td>
