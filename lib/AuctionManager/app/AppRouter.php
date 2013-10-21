@@ -99,6 +99,12 @@ class AppRouter
             $sth = $container['db']->query($sql);
             $sth->execute(array(intval($auction_group_id)));
             $items = $sth->fetchAll(\PDO::FETCH_CLASS);
+            foreach($items as $key => $item) {
+                if($item->image_url) {
+                    $item->large_image_url = str_replace('/s128/','/s512/',$item->image_url);
+                }
+                else {$item->large_image_url = false; }
+            }
             echo $container['twig']->render('allItems.html.twig', array(
                             'pageTitle' => 'All Items',
                             'items' => $items
