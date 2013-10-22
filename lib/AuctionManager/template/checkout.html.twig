@@ -22,6 +22,7 @@
     <div style="margin-bottom: 20px">
         If the person has not yet registered and has no bidder number you need to first register: <a href="{{ webRoot }}register#/model/contact" class="bbs-addNew btn btn-primary">register</a>
     </div>
+    <div>Filter By Bidder Number: <input type="text" id="bidderNumberFilter" style="width: 50px"/></div>
   </div>
   <div class="tab-pane" id="step2">
       <div>
@@ -151,6 +152,14 @@ var init = {
                  }
                ]
             });
+
+            $("#bidderNumberFilter").keyup( function () {
+                /* Filter on the column (the index) of this element */
+                var value = this.value;
+                if(this.value.length > 0)  value = '^' + value + '$';
+                $table.fnFilter( value, 2, true, true);
+            } );
+            //$table.
         }
     });
     
