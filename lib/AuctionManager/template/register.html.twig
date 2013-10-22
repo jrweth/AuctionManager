@@ -68,6 +68,8 @@ var init = {
         },
         modelDefs: $.bbscaffoldModelDefs
     };
+
+    init.modelDefs.contact.columns.donations.editDisplayView = 'none';
     $.extend( true, $.fn.DataTable.TableTools.classes, {
         "container": "btn-group",
         "buttons": {
@@ -130,13 +132,21 @@ var init = {
     	},
     	saveSuccess: function(model, response) {
     		this.collection.add(model);
-    		//save the embedded forms
-    		var bidderModel = new this.scaffold.modelDefs.bidder.backboneModel();
-    		bidderModel.save({contact_id: model.get('id')}, {
-    	    	wait: true,
-    	    	error: function(model, error) { alert(error.responseText);},
-    	    	success: this.bidderSaveSuccess
-    		});
+    		//check to make sure that the contact does not already have a bidder number
+    		var bidderModel = this.scaffold.modelDefs.bidder.backboneCollection.findWhere({contact_id: model.get('id')});
+
+    		if(bidderModel == undefined) {
+        		//save the embedded forms
+        		var bidderModel = new this.scaffold.modelDefs.bidder.backboneModel();
+        		bidderModel.save({contact_id: model.get('id')}, {
+        	    	wait: true,
+        	    	error: function(model, error) { alert(error.responseText);},
+        	    	success: this.bidderSaveSuccess
+        		});
+    		}
+    		else {
+        		this.bidderSaveSuccess(bidderModel);
+    		}
     	},
     	bidderSaveSuccess: function(model, response) {
             $('#step2').removeClass('active');
