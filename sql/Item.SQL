@@ -10,7 +10,7 @@ CREATE TABLE Item
 (
 	id INTEGER NOT NULL,
 	auction_id INTEGER NOT NULL,
-	title INTEGER NOT NULL,
+	title VARCHAR(255) NOT NULL,
 	donor_display_name VARCHAR(255) NOT NULL,
 	description_for_booklet TEXT,
 	description TEXT,
