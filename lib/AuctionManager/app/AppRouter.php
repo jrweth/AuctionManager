@@ -200,6 +200,46 @@ class AppRouter
             ));
         });
         
+        
+        $this->app->get('/reports/specialItemTotals', $authenticate($app), function() use($container) {
+            $sql = "select item.title, sum(amount) total_amount, count(purchase.id) number_purchased
+                from purchase
+                join item on purchase.item_id = item.id
+                left join auction_block on item.auction_block_id = auction_block.id
+                where (auction_block.id is null or auction_block.name != 'Live Auction')
+                and item.auction_id = ". $_SESSION['auctionId'] . '
+                group by item_id, item.title';
+            
+            $sth = $container['db']->query($sql);
+            $sth->execute();
+            $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            echo $container['twig']->render('report.html.twig', array(
+                            'pageTitle' => 'Special Item Totals',
+                            'data' => $data,
+                            'columns' => array('title', 'total_amount', 'number_purcahsed')
+            ));
+        });
+        
+        $this->app->get('/reports/itemDonorReport', $authenticate($app), function() use($container) {
+            $sql = "
+                select item.item_order_number, item.title, contact.first_name, contact.middle_name, contact.last_name, item.donor_committee_contact, sum(purchase.amount) amount_rasied
+                from item
+                left join item_contact on item.id = item_contact.item_id
+                left join contact on item_contact.contact_id = contact.id
+                left join purchase on item.id = purchase.item_id
+                where item.auction_id = ". $_SESSION['auctionId'] . '
+                group by item.item_order_number, item.title, contact.first_name, contact.middle_name, contact.last_name, item.donor_committee_contact';
+        
+            $sth = $container['db']->query($sql);
+            $sth->execute();
+            $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            echo $container['twig']->render('report.html.twig', array(
+                            'pageTitle' => 'Item Donor Report',
+                            'data' => $data,
+                            'columns' => array('item_order_number', 'title', 'first_name', 'middle_name', 'last_name', 'donor_committee_contact', 'amount_raised')
+            ));
+        });
+        
         $this->app->get('/statusUpdate/:auction_group_id', function($auction_group_id) use ($container) {
             
             //get the last purchase from the live auction
