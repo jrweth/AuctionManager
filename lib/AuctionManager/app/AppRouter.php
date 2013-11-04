@@ -202,7 +202,7 @@ class AppRouter
         
         
         $this->app->get('/reports/specialItemTotals', $authenticate($app), function() use($container) {
-            $sql = "select item.title, sum(amount) total_amount, count(purchase.id) number_purchased
+            $sql = "select item.title, sum(amount) total_amount, count(purchase.id) number_purchasers
                 from purchase
                 join item on purchase.item_id = item.id
                 left join auction_block on item.auction_block_id = auction_block.id
@@ -216,7 +216,7 @@ class AppRouter
             echo $container['twig']->render('report.html.twig', array(
                             'pageTitle' => 'Special Item Totals',
                             'data' => $data,
-                            'columns' => array('title', 'total_amount', 'number_purchased')
+                            'columns' => array('title', 'total_amount', 'number_purchasers')
             ));
         });
         
