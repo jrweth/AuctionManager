@@ -216,13 +216,13 @@ class AppRouter
             echo $container['twig']->render('report.html.twig', array(
                             'pageTitle' => 'Special Item Totals',
                             'data' => $data,
-                            'columns' => array('title', 'total_amount', 'number_purcahsed')
+                            'columns' => array('title', 'total_amount', 'number_purchased')
             ));
         });
         
         $this->app->get('/reports/itemDonorReport', $authenticate($app), function() use($container) {
             $sql = "
-                select item.item_order_number, item.title, contact.first_name, contact.middle_name, contact.last_name, item.donor_committee_contact, sum(purchase.amount) amount_rasied
+                select item.item_order_number, item.title, contact.first_name, contact.middle_name, contact.last_name, item.donor_committee_contact, sum(purchase.amount) as amount_raised
                 from item
                 left join item_contact on item.id = item_contact.item_id
                 left join contact on item_contact.contact_id = contact.id
@@ -233,6 +233,7 @@ class AppRouter
             $sth = $container['db']->query($sql);
             $sth->execute();
             $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            
             echo $container['twig']->render('report.html.twig', array(
                             'pageTitle' => 'Item Donor Report',
                             'data' => $data,
