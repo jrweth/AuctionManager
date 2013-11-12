@@ -1282,7 +1282,13 @@
 
             var $edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
             
-            var view = new this.scaffold.views.modelEdit({
+
+            //kill the exisiting view if it exists
+            if(this.scaffold.modelDefs[modelName].editView) {
+                this.scaffold.modelDefs[modelName].editView.undelegateEvents();
+            }
+            
+            this.scaffold.modelDefs[modelName].editView = new this.scaffold.views.modelEdit({
                 el: $edit,
                 scaffold: this.scaffold,
                 modelName: modelName,
@@ -1316,7 +1322,12 @@
             
             var $edit = this.scaffold.elementGetters.modelEdit(this.scaffold.$scaffold, modelName);
             
-            var view = new this.scaffold.views.modelEdit({
+            //kill the exisiting view if it exists
+            if(this.scaffold.modelDefs[modelName].editView) {
+                this.scaffold.modelDefs[modelName].editView.undelegateEvents();
+            }
+            
+            this.scaffold.modelDefs[modelName].editView = new this.scaffold.views.modelEdit({
                 el: $edit,
                 scaffold: this.scaffold,
                 modelName: modelName,
