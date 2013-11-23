@@ -241,6 +241,41 @@ class AppRouter
             ));
         });
         
+        $this->app->get('/reports/donorAddressReport', $authenticate($app), function() use($container) {
+            $sql = "
+                select  contact.id, first_name, middle_name, last_name, spouse_name, organization_name, street1, street2, city, state, zip, email,item.title
+                from item
+                join item_contact on item.id = item_contact.item_id
+                join contact on item_contact.contact_id = contact.id
+                where item.auction_id = ". $_SESSION['auctionId'];
+            $sth = $container['db']->query($sql);
+            $sth->execute();
+            
+            $records = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            $data = array();
+            $dataItems = array();
+            //go through records and compact rows for the item title
+            foreach($records as $record) {
+                $data[$record['id']] = $record;
+                if(array_key_exists($record['id'], $dataItems)) {
+                    $dataItems[$record['id']][] = $record['title'];
+                }
+                else {
+                    $dataItems[$record['id']] = array($record['title']);
+                }
+            }
+            //compact the title
+            foreach($data as $row) {
+                $data[$row['id']]['items'] = implode(', ', $dataItems[$row['id']]);
+            }
+            
+            echo $container['twig']->render('report.html.twig', array(
+                'pageTitle' => 'Item Donor Addresses',
+                'data' => $data,
+                'columns' => array('first_name', 'middle_name', 'last_name', 'spouse_name', 'organization_name', 'street1', 'street2', 'city', 'state', 'zip', 'email', 'items')
+            ));
+        });
+        
         $this->app->get('/statusUpdate/:auction_group_id', function($auction_group_id) use ($container) {
             
             //get the last purchase from the live auction
