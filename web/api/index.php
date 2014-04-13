@@ -46,6 +46,7 @@ $app->get('/', $authenticate($app), function () use($db) {
 });
 
 $app->get('/:tableName', $authenticate($app), function ($tableName) use ($db) {
+    //set the order by
     switch($tableName) {
         case 'contact': $orderBy = 'first_name, last_name, organization_name'; break;
         case 'affiliation': $orderBy = 'name'; break;
@@ -55,7 +56,20 @@ $app->get('/:tableName', $authenticate($app), function ($tableName) use ($db) {
         case 'auction_block_item': $orderBy = 'item_order'; break;
         default: $orderBy = null;
     }
-    echo json_encode(DBHelper::getTableRecords($db, $tableName, $orderBy), JSON_NUMERIC_CHECK);
+    //set the filter by;
+    switch($tableName) {
+        case 'item': 
+        case 'auction':  
+        case 'auction_block': 
+        case 'bidder': 
+            $filterBy = 'auction_id = ' . $_SESSION['auctionId'];
+            break;
+        case 'purchase':
+            $filterBy = 'item_id in (SELECT id from item where auction_id = ' . $_SESSION['auctionId'] . ')';
+            break;
+        default: $filterBy = null;
+    }
+    echo json_encode(DBHelper::getTableRecords($db, $tableName, $orderBy, $filterBy), JSON_NUMERIC_CHECK);
 });
 
 $app->get('/:tableName/:id', $authenticate($app), function ($tableName, $id) use ($db, $app) {

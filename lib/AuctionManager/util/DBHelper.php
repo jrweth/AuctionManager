@@ -38,13 +38,18 @@ class DBHelper {
      *
      * @return array
      */
-    public static function getTableRecords($db, $tableName, $orderBy = null) {
+    public static function getTableRecords($db, $tableName, $orderBy = null, $filterBy = null) {
+        $query = 'SELECT * FROM ' .$tableName;
+        
+        if($filterBy) {
+            $query .= ' WHERE '. $filterBy;
+        }
+        
         if($orderBy) {
-            $sth = $db->query('SELECT * FROM ' .$tableName .' order by ' .$orderBy);
+            $query .= ' order by ' . $orderBy;
         }
-        else {
-            $sth = $db->query('SELECT * FROM ' .$tableName);
-        }
+        
+        $sth = $db->query($query);
         return $sth->fetchAll(\PDO::FETCH_CLASS);
     }
     
