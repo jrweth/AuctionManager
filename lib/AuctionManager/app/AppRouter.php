@@ -276,6 +276,27 @@ class AppRouter
             ));
         });
         
+        $this->app->get('/reports/previousAuctionItems', $authenticate($app), function() use($container) {
+            $sql = "
+            select item.title, category.name as category_name, item.donor_display_name as donor, item.description_for_booklet booklet_description, description, donor_committee_contact
+            from Item
+            join Auction on Item.auction_id = Auction.id
+            join Category on Item.category_id = category.id
+            where auction.id <> ". $_SESSION['auctionId'] . "
+            and auction.auction_group_id = ". $_SESSION['auctionGroupId'];
+            
+            $sth = $container['db']->query($sql);
+            $sth->execute();
+            $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+        
+            echo $container['twig']->render('report.html.twig', array(
+                            'pageTitle' => 'Previous Auction Items',
+                            'data' => $data,
+                            'columns' => array('title', 'category_name', 'donor', 'booklet_description', 'description', 'donor_committee_contact')
+            ));
+        });
+        
+        
         $this->app->get('/statusUpdate/:auction_group_id', function($auction_group_id) use ($container) {
             
             //get the last purchase from the live auction
