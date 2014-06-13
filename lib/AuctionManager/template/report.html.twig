@@ -7,6 +7,9 @@
     <table id="reportTable" class="table table-striped">
         <thead>
             <tr>
+                {% for action_link_columns in action_link_columns %}
+                <th>&#160</th>
+                {% endfor %}
                 {% for column in columns %}
                 <th>{{ column }}</th>
                 {% endfor %}
@@ -15,6 +18,11 @@
         <tbody>
         {% for row in data %}
             <tr>
+            
+                {% for action_link_column in action_link_columns %}
+                <td class="action_link_column"><a href="{{ row[action_link_column]['url']}}">{{ row[action_link_column]['label'] }}</a></td>
+                {% endfor %}
+                
                 {% for column in columns %}
                 <td>{{ row[column] }}</td>
                 {% endfor %}

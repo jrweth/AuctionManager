@@ -1,6 +1,6 @@
 <?php 
 namespace AuctionManager\app;
-
+use AuctionManager\util\DBHelper;
 class AppRouter
 {
     /** @var array */
@@ -278,24 +278,62 @@ class AppRouter
         
         $this->app->get('/reports/previousAuctionItems', $authenticate($app), function() use($container) {
             $sql = "
-            select item.title, category.name as category_name, item.donor_display_name as donor, item.description_for_booklet booklet_description, description, donor_committee_contact
+            select item.id, item.title, category.name as category_name, item.donor_display_name as donor, item.description_for_booklet booklet_description, description, donor_committee_contact
             from Item
             join Auction on Item.auction_id = Auction.id
             join Category on Item.category_id = category.id
             where auction.id <> ". $_SESSION['auctionId'] . "
-            and auction.auction_group_id = ". $_SESSION['auctionGroupId'];
+            and auction.auction_group_id = ". $_SESSION['auctionGroupId'] . "
+            order by Item.title";
             
             $sth = $container['db']->query($sql);
             $sth->execute();
             $data = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            foreach($data as $key=> $record) {
+                $data[$key]['copy_link'] = array(
+                    'url' => $container['config']['webRoot'] . 'copyPreviousItems/' . $record['id'],
+                    'label' => 'copy to current auction'
+                );
+            }
         
             echo $container['twig']->render('report.html.twig', array(
                             'pageTitle' => 'Previous Auction Items',
                             'data' => $data,
+                            'action_link_columns' => array('copy_link'),
                             'columns' => array('title', 'category_name', 'donor', 'booklet_description', 'description', 'donor_committee_contact')
             ));
         });
         
+        $this->app->get('/copyPreviousItems/:item_id', $authenticate($app), function($item_id) use ($app) {
+            $container = $app->container;
+            //make sure this user has access to this item
+            $sql = 'select auction_group_id
+                    from item
+                    join auction on item.auction_id = auction.id
+                    where item.id = ?
+                    and auction.auction_group_id = ?';
+            
+            $stmt = $container['db']->query($sql);
+            $stmt->execute(array($item_id, $_SESSION['auctionGroupId']));
+            $records = $stmt->fetchAll(\PDO::FETCH_CLASS);
+            
+            if(!array_key_exists(0, $records)) {
+                exit('You are not authorized to add items');
+            }
+            
+            //copy the item
+            $newItemId = DBHelper::getNextId($container['db'], 'item');
+            
+            $itemColumns = array('title', 'donor_display_name', 'description_for_booklet', 'description', 'category_id', 'value', 'min_bid', 'donor_committee_contact', 'notes', 'additional_information', 'image_url');
+            $sql = 'insert into item (id, auction_id, ' . implode(', ', $itemColumns) .')
+                    select '. $newItemId .', ' . $_SESSION['auctionId'] . ',' . implode(', ', $itemColumns) . '
+                    from item
+                    where id = ?';
+            $stmt = $container['db']->query($sql);
+            $stmt->execute(array($item_id));
+            
+            $app->redirect($app->container['config']['webRoot'].'entry/item#model/item/edit/' . $newItemId);
+        });
         
         $this->app->get('/statusUpdate/:auction_group_id', function($auction_group_id) use ($container) {
             
