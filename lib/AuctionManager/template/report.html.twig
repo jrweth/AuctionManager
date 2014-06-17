@@ -3,6 +3,7 @@
 
 
 {% block content %}
+    {% if message %}<div class="message">{{ message }}</div>{% endif %}
     <h1>{{ pageTitle }}</h1>
     <table id="reportTable" class="table table-striped">
         <thead>

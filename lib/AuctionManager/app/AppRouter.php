@@ -21,6 +21,7 @@ class AppRouter
     
     //define all of the routes 
     public function route() {
+
         $this->app->container = $this->container;
         $app = $this->app;
         $container = $this->container;
@@ -276,7 +277,8 @@ class AppRouter
             ));
         });
         
-        $this->app->get('/reports/previousAuctionItems', $authenticate($app), function() use($container) {
+        $this->app->get('/reports/previousAuctionItems', $authenticate($app), function() use($app) {
+            $container = $app->container;
             $sql = "
             select item.id, item.title, category.name as category_name, item.donor_display_name as donor, item.description_for_booklet booklet_description, description, donor_committee_contact
             from Item
@@ -295,10 +297,11 @@ class AppRouter
                     'label' => 'copy to current auction'
                 );
             }
-        
+            $flash = $app->view()->getData('flash');
             echo $container['twig']->render('report.html.twig', array(
                             'pageTitle' => 'Previous Auction Items',
                             'data' => $data,
+                            'message' => $flash['message'],
                             'action_link_columns' => array('copy_link'),
                             'columns' => array('title', 'category_name', 'donor', 'booklet_description', 'description', 'donor_committee_contact')
             ));
@@ -321,6 +324,7 @@ class AppRouter
                 exit('You are not authorized to add items');
             }
             
+            
             //copy the item
             $newItemId = DBHelper::getNextId($container['db'], 'item');
             
@@ -332,7 +336,21 @@ class AppRouter
             $stmt = $container['db']->query($sql);
             $stmt->execute(array($item_id));
             
-            $app->redirect($app->container['config']['webRoot'].'entry/item#model/item/edit/' . $newItemId);
+            //get the donor contacts and copy those
+            $sql = 'select contact_id from Item_Contact where item_id = ?';
+            $stmt = $container['db']->query($sql);
+            $stmt->execute(array($item_id));
+            $records = $stmt->fetchAll(\PDO::FETCH_CLASS);
+            
+            foreach($records as $record) {
+                $values = array('contact_id' => $record->contact_id, 'item_id' => $newItemId);
+                DBHelper::insertTableRecord($container['db'], 'Item_Contact', $values);
+            }
+            
+            $app->flash('message', 'You Successfully Copied the Item to the current Auction');
+            $app->redirect($app->container['config']['webRoot'].'/reports/previousAuctionItems');
+            //$app->redirect($app->container['config']['webRoot'].'entry/item#model/item/edit/' . $newItemId);
+       
         });
         
         $this->app->get('/statusUpdate/:auction_group_id', function($auction_group_id) use ($container) {

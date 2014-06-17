@@ -23,6 +23,12 @@ ul.sortable li {
 	margin-top: 10px;
 }
 
+.message {
+    background-color: #9999ff;
+    color: #000099;
+    padding: 5px;
+    border: 1px solid #000099;
+}
 .navbar .nav > li > a {
 	padding: 10px 7px 10px;;
 }
