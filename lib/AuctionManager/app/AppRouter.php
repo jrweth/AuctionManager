@@ -280,11 +280,22 @@ class AppRouter
         $this->app->get('/reports/previousAuctionItems', $authenticate($app), function() use($app) {
             $container = $app->container;
             $sql = "
-            select item.id, item.title, category.name as category_name, item.donor_display_name as donor, item.description_for_booklet booklet_description, description, donor_committee_contact
+            select
+                item.id,
+                item.title,
+                category.name as category_name,
+                item.donor_display_name as donor,
+                item.description_for_booklet booklet_description,
+                description,
+                donor_committee_contact,
+                substr(Auction.auction_date,7) auction_year,
+                max(purchase.amount) highest_bid
             from Item
             join Auction on Item.auction_id = Auction.id
             join Category on Item.category_id = category.id
+            left join Purchase on Item.id = Purchase.item_id
             where auction.id <> ". $_SESSION['auctionId'] . "
+            group by item.id, item.title, category.name, item.donor_display_name, item.description_for_booklet, description, donor_committee_contact, substr(Auction.auction_date,7)
             and auction.auction_group_id = ". $_SESSION['auctionGroupId'] . "
             order by Item.title";
             
@@ -303,7 +314,7 @@ class AppRouter
                             'data' => $data,
                             'message' => $flash['message'],
                             'action_link_columns' => array('copy_link'),
-                            'columns' => array('title', 'category_name', 'donor', 'booklet_description', 'description', 'donor_committee_contact')
+                            'columns' => array('title', 'category_name', 'donor', 'booklet_description', 'description', 'donor_committee_contact', 'auction_year', 'highest_bid')
             ));
         });
         
