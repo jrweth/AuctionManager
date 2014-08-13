@@ -292,7 +292,7 @@ class AppRouter
                 max(purchase.amount) highest_bid
             from Item
             join Auction on Item.auction_id = Auction.id
-            join Category on Item.category_id = category.id
+            left join Category on Item.category_id = category.id
             left join Purchase on Item.id = Purchase.item_id
             where auction.id <> ". $_SESSION['auctionId'] . "
             group by item.id, item.title, category.name, item.donor_display_name, item.description_for_booklet, description, donor_committee_contact, substr(Auction.auction_date,7)
