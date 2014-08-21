@@ -90,15 +90,23 @@ class AppRouter
         });
         
         
-        $this->app->get('/allItems/:auction_group_id', function($auction_group_id) use ($container) {
+        $this->app->get('/allItems/:auction_group_id(/)(:auction_block_name/?)', function($auction_group_id, $auction_block_name = null) use ($container) {
             $sql = 'select Item.title, Item.donor_display_name, Item.description, Item.image_url, Item.item_order_number, category.name as category_name
             from Item join auction on item.auction_id = auction.id
             left join category on item.category_id = category.id
+            left join auction_block on item.auction_block_id = auction_block.id
             where auction.is_default_auction = 1
             and Item.public_display_item = \'yes\'
             and auction.auction_group_id = ?';
+            
+            $params = array(intval($auction_group_id));
+            if($auction_block_name) {
+                $sql .= ' and auction_block.name = ?';
+                $params[] = $auction_block_name;
+            }
             $sth = $container['db']->query($sql);
-            $sth->execute(array(intval($auction_group_id)));
+            $sth->execute($params);
+
             $items = $sth->fetchAll(\PDO::FETCH_CLASS);
             foreach($items as $key => $item) {
                 if($item->image_url) {
@@ -107,7 +115,7 @@ class AppRouter
                 else {$item->large_image_url = false; }
             }
             echo $container['twig']->render('allItems.html.twig', array(
-                            'pageTitle' => 'All Items',
+                            'pageTitle' => ($auction_block_name ? $auction_block_name : 'All Items'),
                             'items' => $items
             ));
         });
