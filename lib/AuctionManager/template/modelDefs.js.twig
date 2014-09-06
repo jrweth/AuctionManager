@@ -52,7 +52,23 @@ $.bbscaffoldModelDefs = {
             }
         },
         modelToString: function(model, modelDef, scaffold) {
-            return model.get('first_name') + ' ' + model.get('last_name');
+            var returnName = '';
+            
+            if(model.get('organization_name')) {
+                returnName = returnName + model.get('organization_name');
+                if (model.get('first_name') || model.get('last_name')) {
+                    returnName = returnName + ' - ';
+                }
+            }
+            if (model.get('first_name')) {
+                returnName = returnName + model.get('first_name');
+            }
+            
+            if (model.get('last_name')) {
+                returnName = returnName + ' ' + model.get('last_name');
+            }
+            
+            return returnName;
         },
         relatedModels: {
             item_contact: {
