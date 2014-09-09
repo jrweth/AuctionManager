@@ -632,6 +632,7 @@
                 
                 if(this.isEmbeddedForm == false) {
                     var editActionsTemplate = _.template(this.scaffold.templates.modelEditActions);
+                    this.$el.prepend(editActionsTemplate({modelName: this.modelName, modelDef: this.modelDef, scaffold: this.scaffold}));
                     this.$el.append(editActionsTemplate({modelName: this.modelName, modelDef: this.modelDef, scaffold: this.scaffold}));
                 }
                 

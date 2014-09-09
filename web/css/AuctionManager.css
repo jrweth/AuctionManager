@@ -33,6 +33,15 @@ ul.sortable li {
 	padding: 10px 7px 10px;;
 }
 .bbs-loading{ font-size: 20px; color: grey}
+
+textarea.bbs-editInputTextArea {
+	width: 600px;
+	height: 200px;
+}
+
+.bbs-columnEdit {
+	margin-bottom: 20px;
+}
 @media print
 {    
     .no-print, .no-print *
