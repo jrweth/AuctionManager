@@ -44,6 +44,7 @@ class AppRouter
                 $app->container['twig']->addGlobal('user', $user);
                 $app->container['twig']->addGlobal('auctionId', $_SESSION['auctionId']);
                 $app->container['twig']->addGlobal('auctionGroupId', $_SESSION['auctionGroupId']);
+                $app->container['twig']->addGlobal('roles', $_SESSION['roles']);
             }
         });
         $this->app->expires('-1 day');
@@ -424,7 +425,10 @@ class AppRouter
         
         $app->get("/logout", function () use ($app) {
            unset($_SESSION['user']);
-            $app->redirect($app->container['config']['webRoot']);
+           unset($_SESSION['userId']);
+           unset($_SESSION['auctionGroupId']);
+           unset($_SESSION['roles']);
+           $app->redirect($app->container['config']['webRoot']);
         });
         
         $app->get("/login", function () use ($app) {
@@ -464,7 +468,12 @@ class AppRouter
             $username = $app->request()->post('username');
             $password = md5($app->request()->post('password'));
 
-            $stmt = $app->container['db']->query('select id, name from auction_group where username = ? and password = ?');
+            $stmt = $app->container['db']->query('
+                select distinct auction_group.id, auction_group.name, user_role.user_id
+                from auction_group
+                join user_role on auction_group.id = user_role.auction_group_id
+                join user on user_role.user_id = user.id
+                where user.username = ? and user.password = ?');
             $params = array($username, $password);
             $stmt->execute($params);
             
@@ -472,8 +481,19 @@ class AppRouter
             if(array_key_exists(0, $records)) {
                 //set session options
                 $_SESSION['user'] = $username;
+                $_SESSION['userId'] = $records[0]->user_id;
                 $_SESSION['auctionGroupId'] = $records[0]->id;
                 
+                //get roles defined for this user
+                $stmt = $app->container['db']->query('select distinct Role.name
+					from User_Role
+					join Role on User_Role.role_id = Role.id
+					where User_Role.user_id = ?');
+                $stmt->execute(array($_SESSION['userId']));
+                
+                $_SESSION['roles'] = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+                
+                                
                 //go get the default auction for this auction group
                 $stmt = $app->container['db']->query('select id from auction where auction_group_id = ? and is_default_auction = 1');
                 $stmt->execute(array($_SESSION['auctionGroupId']));
