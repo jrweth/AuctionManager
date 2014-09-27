@@ -30,6 +30,7 @@ $app->add(new \Slim\Middleware\SessionCookie(array('secret' => 'hereismysecretth
 $loader = new Twig_Loader_Filesystem($config['projectRoot'].'lib/AuctionManager/template');
 $twig = new Twig_Environment($loader);
 $twig->addGlobal('webRoot', $config['webRoot']);
+$twig->addExtension(new \AuctionManager\util\AutoLinkTwigExtension());
 
 //load db
 $db = new PDO('sqlite:' . $config['projectRoot'].$config['dbPath']);
