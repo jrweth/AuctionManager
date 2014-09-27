@@ -25,7 +25,7 @@
         {% if item.image_url %}
             <img src="{{ item.image_url }}" style="float:left; max-width: 200px; max-height: 200px; margin-right: 20px" />
         {% endif %}
-        <div>{{ item.description }}</div>
+        <div>{{ item.description|auto_link_text|nl2br }}</div>
         {% if item.item_order_number %}<!--  div><i>item order #</i>{{ item.item_order_number }}</div-->{% endif %}
         <div><i>donated by: </i><b>{{ item.donor_display_name }}</b></div>
         </td>
