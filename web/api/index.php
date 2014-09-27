@@ -65,6 +65,7 @@ $app->get('/:tableName', $authenticate($app), function ($tableName) use ($db) {
             $filterBy = 'auction_id = ' . $_SESSION['auctionId'];
             break;
         case 'purchase':
+        case 'item_contact':
             $filterBy = 'item_id in (SELECT id from item where auction_id = ' . $_SESSION['auctionId'] . ')';
             break;
         default: $filterBy = null;
