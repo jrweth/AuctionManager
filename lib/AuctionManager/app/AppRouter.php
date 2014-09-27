@@ -59,7 +59,13 @@ class AppRouter
         });
         
         $this->app->get('/entry/:model', $authenticate($app), function() use($container) {
-            echo $container['twig']->render('entry.html.twig', array('pageTitle' => 'Contact List'));
+            if(in_array('Admin', $_SESSION['roles'])) $blockItemEntry = false;
+            else $blockItemEntry = true;
+            
+            echo $container['twig']->render('entry.html.twig', array(
+              'pageTitle' => 'Entry List',
+              'blockItemEntry' => $blockItemEntry
+            ));
         });
         
 

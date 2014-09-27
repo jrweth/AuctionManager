@@ -1,6 +1,15 @@
 {% extends "layout.html.twig" %}
 
-{% block content %}{% endblock %}
+{% block content %}
+{% if blockItemEntry %}
+    <style>
+        div.bbs-model-item .bbs-edit,
+        div.bbs-model-item .bbs-delete,
+        div.bbs-model-item .bbs-addNew {
+            display: none
+        }
+    </style>{% endif %}
+{% endblock %}
 
 {% block customJS %}
 <script type="text/javascript" src="{{ webRoot }}modelDefs.js"></script>
