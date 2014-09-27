@@ -354,7 +354,7 @@ class AppRouter
             //copy the item
             $newItemId = DBHelper::getNextId($container['db'], 'item');
             
-            $itemColumns = array('title', 'donor_display_name', 'description_for_booklet', 'description', 'category_id', 'value', 'min_bid', 'donor_committee_contact', 'notes', 'additional_information', 'image_url');
+            $itemColumns = array('title', 'donor_display_name', 'description_for_booklet', 'description', 'category_id', 'value', 'min_bid', 'donor_committee_contact', 'notes',  'image_url');
             $sql = 'insert into item (id, auction_id, ' . implode(', ', $itemColumns) .')
                     select '. $newItemId .', ' . $_SESSION['auctionId'] . ',' . implode(', ', $itemColumns) . '
                     from item

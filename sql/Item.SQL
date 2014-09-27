@@ -26,7 +26,6 @@ CREATE TABLE Item
 	item_order_number NUMBER,
 	auction_block_id INTEGER,
 	notes TEXT,
-	additional_information TEXT,
 	image_url VARCHAR(255),
 	PRIMARY KEY (id),
 	FOREIGN KEY (auction_id) REFERENCES Auction (id) ON DELETE CASCADE,
