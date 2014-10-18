@@ -93,8 +93,34 @@
             });
         },
     });
+    //hack for including just item number in purchase entry
+    $.bbscaffold.views.modelColumnItemNumber = $.bbscaffold.views.modelColumnLookup.extend({
+        initialize: function() {
+            this.scaffold = this.options.scaffold;
+            this.modelName = this.options.modelName;
+            this.columnName = 'item_id';
+            this.model = this.options.model;
+            
+            //get some helper attributes
+            this.modelDef = this.scaffold.modelDefs[this.modelName];
+            this.columnDef = this.modelDef.columns[this.columnName];
+            this.relatedModelDef = this.scaffold.modelDefs[this.columnDef.relatedModelName];
+            this.relatedCollection = this.relatedModelDef.backboneCollection;
     
-    
+            //if the related column is set then get the related model
+            this.onChange();
+            this.model.on('change', this.onChange, this);
+        },
+        render: function() {
+            this.$el.html('');
+            if(this.columnValue) {
+                if(this.relatedModel != undefined) {
+                    this.$el.html(this.relatedModel.get('item_order_number'));
+                }
+            }
+            return this;
+        }
+    });
     $.bbscaffold.setupScaffold('#content');
 </script>
 {% endblock %}
